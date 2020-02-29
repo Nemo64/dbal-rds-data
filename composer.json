@@ -12,6 +12,7 @@
         "data",
         "data-api"
     ],
+    "license": "MIT",
     "type": "library",
     "authors": [
         {
