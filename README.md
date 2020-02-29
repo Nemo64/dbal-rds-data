@@ -17,10 +17,10 @@ I tested the schema tools, migrations and transactions.
 - The data api makes it possible to use a database in an aws hosting environment
   without the need for VPC's which are not that easy to set up,
   might cost money if you need internet access
-  and slow down lambda function starts if you use the awesome [bref] project. 
+  and slow down lambda function starts (which is possible using [bref]).
 - Your application does not need the database password in plain text.
   You just need access to the aws api which can be managed a lot better.
-  (there are other ways to achive the same but still, it is really easy with the data api)
+  (there are other ways to achieve the same but still, it is really easy with the data api)
 - There might be a performance benefit due to not needing to establish
   a direct database connection and automatic pool management
   (which is unheard of in the php world)
