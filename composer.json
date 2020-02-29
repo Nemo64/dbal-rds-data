@@ -1,0 +1,43 @@
+{
+    "name": "nemo64/dbal-rds-data",
+    "description": "rds-data driver for doctrine dbal",
+    "keywords": [
+        "doctrine",
+        "dbal",
+        "driver",
+        "rds",
+        "aurora",
+        "aws",
+        "sdk",
+        "data",
+        "data-api"
+    ],
+    "type": "library",
+    "authors": [
+        {
+            "name": "Marco Pfeiffer",
+            "email": "git@marco.zone"
+        }
+    ],
+    "require": {
+        "php": "~7.1",
+        "aws/aws-sdk-php": "^3.98",
+        "doctrine/dbal": "^2.7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nemo64\\DbalRdsData\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nemo64\\DbalRdsData\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit tests"
+    }
+}
