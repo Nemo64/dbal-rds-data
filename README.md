@@ -1,3 +1,8 @@
+![Packagist Version](https://img.shields.io/packagist/v/Nemo64/dbal-rds-data)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Nemo64/dbal-rds-data/Test?label=tests)
+![Packagist License](https://img.shields.io/packagist/l/Nemo64/dbal-rds-data)
+![Packagist Downloads](https://img.shields.io/packagist/dm/Nemo64/dbal-rds-data)
+
 # doctrine driver for the rds data api
 
 This is a driver to use the aws [rds-data] api on projects
