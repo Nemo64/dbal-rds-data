@@ -53,7 +53,7 @@ doctrine:
         # the url can override the driver class
         # but I can't define this driver in the url which is why i made it the default
         # Doctrine\DBAL\DriverManager::parseDatabaseUrlScheme
-        driver_class: App\Service\Aws\Doctrine\RdsDataDriver
+        driver_class: Nemo64\DbalRdsData\RdsDataDriver
         url: '%env(resolve:DATABASE_URL)%'
 ```
 ```sh
