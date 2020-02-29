@@ -4,13 +4,16 @@
     "keywords": [
         "doctrine",
         "dbal",
+        "orm",
         "driver",
         "rds",
         "aurora",
+        "serverless",
         "aws",
         "sdk",
         "data",
-        "data-api"
+        "data-api",
+        "symfony"
     ],
     "license": "MIT",
     "type": "library",

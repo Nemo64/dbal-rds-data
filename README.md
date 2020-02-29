@@ -25,7 +25,53 @@ I tested the schema tools, migrations and transactions.
 - This implementation isn't well tested. Be prepared for problems.
 - The [rds-data] api has size restrictions in the [ExecuteStatement] call
   which might become a problem when your application grows.
+  I have ideas how to work around that but there is nothing implemented yet.
 - The [rds-data] api is currently only available in [a few regions].
+
+## How to use it
+
+If you use dbal directly than this is the way:
+
+```php
+<?php
+$connectionParams = array(
+    'driverClass' => \Nemo64\DbalRdsData\RdsDataDriver::class,
+    'host' => 'eu-west-1', // the aws region
+    'user' => '[aws-api-key]', // optional if it is defined in the environment 
+    'password' => '[aws-api-secret]', // optional if it is defined in the environment
+    'dbname' => 'mydb',
+);
+$conn = \Doctrine\DBAL\DriverManager::getConnection($connectionParams);
+```
+
+Since I developed in symfony project, I might as well add how to define the driver in symfony:
+
+```yaml
+# doctrine.yaml
+doctrine:
+    dbal:
+        # the url can override the driver class
+        # but I can't define this driver in the url which is why i made it the default
+        # Doctrine\DBAL\DriverManager::parseDatabaseUrlScheme
+        driver_class: App\Service\Aws\Doctrine\RdsDataDriver
+        url: '%env(resolve:DATABASE_URL)%'
+```
+```sh
+# .env
+
+# you must not include a driver in the database url
+# in this case I also didn't include the aws tokens in the url 
+DATABASE_URL=//eu-west-1/mydb
+
+# the aws-sdk will pick those up
+# they are automatically configured in lambda and ec2 environments 
+#AWS_ACCESS_KEY_ID=...
+#AWS_SECRET_ACCESS_KEY=...
+#AWS_SESSION_TOKEN=...
+```
+
+Other than the configuration it should work exactly like any other dbal connection.
+
 
 [rds-data]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
 [bref]: https://bref.sh/
