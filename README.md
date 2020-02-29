@@ -1,7 +1,7 @@
-![Packagist Version](https://img.shields.io/packagist/v/Nemo64/dbal-rds-data)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Nemo64/dbal-rds-data/Test?label=tests)
-![Packagist License](https://img.shields.io/packagist/l/Nemo64/dbal-rds-data)
-![Packagist Downloads](https://img.shields.io/packagist/dm/Nemo64/dbal-rds-data)
+[![Packagist Version](https://img.shields.io/packagist/v/Nemo64/dbal-rds-data)](https://packagist.org/packages/nemo64/dbal-rds-data)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Nemo64/dbal-rds-data/Test?label=tests)](https://github.com/Nemo64/dbal-rds-data/actions)
+[![Packagist License](https://img.shields.io/packagist/l/Nemo64/dbal-rds-data)](https://github.com/Nemo64/dbal-rds-data/blob/master/LICENSE)
+[![Packagist Downloads](https://img.shields.io/packagist/dm/Nemo64/dbal-rds-data)](https://packagist.org/packages/nemo64/dbal-rds-data)
 
 # doctrine driver for the rds data api
 
