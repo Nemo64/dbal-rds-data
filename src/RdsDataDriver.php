@@ -31,7 +31,7 @@ class RdsDataDriver extends Driver\AbstractMySQLDriver
         $options['http_handler'] = new GuzzleHandler(new Client([
             // all calls to the data-api will time out after 45 seconds
             // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
-            'timeout' => 45,
+            'timeout' => $driverOptions['timeout'] ?? 45,
         ]));
 
         return new RdsDataConnection(
