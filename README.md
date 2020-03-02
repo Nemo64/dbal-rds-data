@@ -6,7 +6,7 @@
 # doctrine driver for the rds data api
 
 This is a driver to use the aws [rds-data] api on projects
-that are using dbal for their database access.
+that are using [dbal] for their database access.
 
 It emulates a MySQL connection including transactions.
 However: the driver does never establish a persistent connection.
@@ -101,9 +101,33 @@ Other than the configuration it should work exactly like any other dbal connecti
 Sure, here is a CloudFormation template to configure [Aurora Serverless] and a [Secret],
 putting both together and setting an environment variable with the needed information.
 
+This might be [serverless] flavoured but you should get the hang of it.
+
 ```yaml
 
 # [...]
+
+  iamRoleStatements:
+    # allow using the rds-data api
+    # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.access
+    - Effect: Allow
+      Resource: '*' # it isn't supported to limit this
+      Action:
+        # https://docs.aws.amazon.com/IAM/latest/UserGuide/list_amazonrdsdataapi.html
+        - rds-data:ExecuteStatement
+        - rds-data:BeginTransaction
+        - rds-data:CommitTransaction
+        - rds-data:RollbackTransaction
+    # this rds-data endpoint will use the same identity to get the secret 
+    # so you need to be able to read the password secret
+    - Effect: Allow
+      Resource: !Ref DatabasePassword
+      Action:
+        # https://docs.aws.amazon.com/IAM/latest/UserGuide/list_awssecretsmanager.html
+        - secretsmanager:GetSecretValue
+
+# [...]
+
   environment:
     DATABASE_URL: !Join
       - ''
@@ -145,6 +169,7 @@ putting both together and setting an environment variable with the needed inform
 
 
 [rds-data]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
+[dbal]: https://www.doctrine-project.org/projects/doctrine-dbal/en/2.10/index.html
 [bref]: https://bref.sh/
 [ExecuteStatement]: https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_ExecuteStatement.html
 [a few regions]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions
@@ -153,3 +178,4 @@ putting both together and setting an environment variable with the needed inform
 [access to your database]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.access
 [a secret]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.secrets
 [Secret]: https://aws.amazon.com/de/secrets-manager/
+[serverless]: https://serverless.com/
