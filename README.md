@@ -68,6 +68,19 @@ $connectionParams = array(
 $conn = \Doctrine\DBAL\DriverManager::getConnection($connectionParams);
 ```
 
+
+Or use the short syntax:
+
+```php
+<?php
+$connectionParams = array(
+    'driverClass' => \Nemo64\DbalRdsData\RdsDataDriver::class,
+    'url' => '//eu-west-1/mydb',
+);
+$conn = \Doctrine\DBAL\DriverManager::getConnection($connectionParams);
+```
+
+
 Since I developed in symfony project, I might as well add how to define the driver in symfony:
 
 ```yaml
