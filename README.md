@@ -165,6 +165,12 @@ This might be [serverless] flavoured but you should get the hang of it.
         GenerateStringKey: "password"
         PasswordLength: 41 # max length of a mysql password
         ExcludeCharacters: '"@/\'
+  DatabaseSecretAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-secretsmanager-secrettargetattachment.html
+    Properties:
+      SecretId: !Ref DatabasePassword
+      TargetId: !Ref Database
+      TargetType: AWS::RDS::DBCluster
 ```
 
 
