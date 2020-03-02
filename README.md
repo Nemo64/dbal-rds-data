@@ -64,18 +64,24 @@ $connectionParams = array(
     'user' => '[aws-api-key]', // optional if it is defined in the environment 
     'password' => '[aws-api-secret]', // optional if it is defined in the environment
     'dbname' => 'mydb',
+    'driverOptions' => [
+        'resourceArn' => 'arn:aws:rds:eu-west-1:012345678912:cluster:database-1np9t9hdbf4mk',
+        'secretArn' => 'arn:aws:secretsmanager:eu-west-1:012345678912:secret:db-password-tSo334',
+    ]
 );
 $conn = \Doctrine\DBAL\DriverManager::getConnection($connectionParams);
 ```
 
 
-Or use the short syntax:
+Or use the short url syntax which is easier to change using environment variables:
 
 ```php
 <?php
 $connectionParams = array(
     'driverClass' => \Nemo64\DbalRdsData\RdsDataDriver::class,
-    'url' => '//eu-west-1/mydb',
+    'url' => '//eu-west-1/mydb'
+        . '?driverOptions[resourceArn]=arn:aws:rds:eu-west-1:012345678912:cluster:database-1np9t9hdbf4mk'
+        . '&driverOptions[secretArn]=arn:aws:secretsmanager:eu-west-1:012345678912:secret:db-password-tSo334'
 );
 $conn = \Doctrine\DBAL\DriverManager::getConnection($connectionParams);
 ```
