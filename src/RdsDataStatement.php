@@ -199,8 +199,6 @@ class RdsDataStatement implements \IteratorAggregate, Statement
             return true;
         } catch (RDSDataServiceException $exception) {
             if ($exception->getAwsErrorCode() === 'BadRequestException') {
-                // TODO There is no status code information in the error so it can't be correctly mapped
-                // https://forums.aws.amazon.com/thread.jspa?threadID=317595
                 throw new RdsDataException($exception->getAwsErrorMessage());
             }
 

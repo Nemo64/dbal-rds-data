@@ -204,6 +204,29 @@ This might be [serverless] flavoured but you should get the hang of it.
       TargetType: AWS::RDS::DBCluster
 ```
 
+## Implementation details
+
+### Error handling
+
+The rds data api does only provide error messages, not error codes.
+To correctly map those errors to dbal exceptions I use a huge regular expression.
+See: `\Nemo64\DbalRdsData\RdsDataException::EXPRESSION`.
+Since most of it is generated using the [mysql error documentation],
+it should be fine but it might not be 100% reliable.
+I asked for this in the [amazon developer forum] but haven't gotten a response yet.
+
+### Paused databases
+
+If an [Aurora Serverless] is paused, you'll get this error message:
+> Communications link failure The last packet sent successfully to the server was 0 milliseconds ago.
+> The driver has not received any packets from the server.
+
+I mapped this error message to [error code `2002`] which is normally a socket connection error
+but this will cause the dbal's `Doctrine\DBAL\Driver\AbstractMySQLDriver::convertException` to map this error
+to an `Doctrine\DBAL\Exception\ConnectionException` which existing application might already handle gracefully.
+But the most important thing is that you can catch and handle it in your application
+to better tell your user that the database is paused and will probably be available soon. 
+
 
 [rds-data]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
 [dbal]: https://www.doctrine-project.org/projects/doctrine-dbal/en/2.10/index.html
@@ -218,3 +241,6 @@ This might be [serverless] flavoured but you should get the hang of it.
 [serverless]: https://serverless.com/
 [RDS-Management]: https://console.aws.amazon.com/rds/home
 [timeout setting of guzzle]: http://docs.guzzlephp.org/en/stable/request-options.html#timeout
+[mysql error documentation]: https://dev.mysql.com/doc/refman/5.6/en/server-error-reference.html
+[amazon developer forum]: https://forums.aws.amazon.com/thread.jspa?threadID=317595
+[error code `2002`]: https://dev.mysql.com/doc/refman/5.6/en/client-error-reference.html#error_cr_connection_error
