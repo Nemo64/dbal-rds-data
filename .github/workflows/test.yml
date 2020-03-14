@@ -6,12 +6,11 @@ jobs:
   test:
     strategy:
       matrix:
-        operating-system: [ubuntu-latest]
         php-version: ['7.1', '7.2', '7.3', '7.4']
         composer-parameters: ['', '--prefer-stable', '--prefer-lowest']
 
-    runs-on: ${{ matrix.operating-system }}
-    name: PHP ${{ matrix.php-version }} Test on ${{ matrix.operating-system }}
+    runs-on: ubuntu-latest
+    name: Test PHP ${{ matrix.php-version }} ${{ matrix.composer-parameters }}
     steps:
       - uses: shivammathur/setup-php@v2
         with:
