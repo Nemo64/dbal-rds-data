@@ -166,12 +166,37 @@ class RdsDataConnectionTest extends TestCase
                 'sql' => 'UPDATE foobar SET value = 1',
             ],
             [
-                'numberOfRecordsUpdated' => 5
+                'numberOfRecordsUpdated' => 5,
             ]
         );
 
         $rowCount = $this->connection->exec('UPDATE foobar SET value = 1');
         $this->assertEquals(5, $rowCount);
+    }
+
+    public function testParameters()
+    {
+        $this->addClientCall(
+            'executeStatement',
+            self::DEFAULT_OPTIONS + [
+                'database' => 'db',
+                'continueAfterTimeout' => false,
+                'includeResultMetadata' => true,
+                'parameters' => [
+                    ['name' => '0', 'value' => ['stringValue' => 5]],
+                ],
+                'resultSetOptions' => ['decimalReturnType' => 'STRING'],
+                'sql' => 'UPDATE foobar SET value = :0',
+            ],
+            [
+                'numberOfRecordsUpdated' => 5,
+            ]
+        );
+
+        $statement = $this->connection->prepare('UPDATE foobar SET value = ?');
+        $statement->bindValue(0, 5);
+        $statement->execute();
+        $this->assertEquals(5, $statement->rowCount());
     }
 
     public static function quoteValues()

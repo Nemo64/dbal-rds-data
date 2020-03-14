@@ -21,7 +21,6 @@ class RdsDataStatement extends AbstractStatement
      * @see https://en.wikipedia.org/wiki/Data_definition_language
      */
     private const DDL_REGEX = '#^\s*(CREATE|DROP|ALTER|TRUNCATE)\s+(TABLE|INDEX|VIEW)#Si';
-
     /**
      * @var RdsDataConnection
      */
@@ -33,13 +32,9 @@ class RdsDataStatement extends AbstractStatement
     private $dataConverter;
 
     /**
-     * @var array
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-rds-data-2018-08-01.html#shape-sqlparameter
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-rds-data-2018-08-01.html#executestatement
-     * @see https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_SqlParameter.html
-     * @see https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_Field.html
+     * @var RdsDataParameterBag
      */
-    private $parameters = [];
+    private $parameterBag;
 
     /**
      * @var string
@@ -56,6 +51,7 @@ class RdsDataStatement extends AbstractStatement
     {
         $this->connection = $connection;
         $this->dataConverter = $dataConverter ?? new RdsDataConverter();
+        $this->parameterBag = new RdsDataParameterBag($this->dataConverter);
         $this->sql = $sql;
     }
 
@@ -140,32 +136,7 @@ class RdsDataStatement extends AbstractStatement
      */
     public function bindParam($column, &$variable, $type = ParameterType::STRING, $length = null): bool
     {
-        if ($length !== null) {
-            throw new \RuntimeException("length parameter not implemented.");
-        }
-
-        $this->parameters[$column] = [&$variable, $type];
-        return true;
-    }
-
-    /**
-     * Because the variable is only "bound" and can therefore change,
-     * I must convert the representation just before sending the query.
-     *
-     * @return array
-     */
-    private function getParameters(): array
-    {
-        $result = [];
-
-        foreach ($this->parameters as $column => $arguments) {
-            $result[] = [
-                'name' => (string)$column,
-                'value' => $this->dataConverter->convertToJson(...$arguments),
-            ];
-        }
-
-        return $result;
+        return $this->parameterBag->bindParam($column, $variable, $type, $length);
     }
 
     /**
@@ -182,18 +153,7 @@ class RdsDataStatement extends AbstractStatement
      */
     private function getSql(): string
     {
-        $sql = $this->sql;
-
-        $numericParameters = array_filter(array_keys($this->parameters), 'is_int');
-        if (count($numericParameters) > 0) {
-            $index = min($numericParameters);
-
-            $sql = preg_replace_callback('/\?/', function () use (&$index) {
-                return ':' . $index++;
-            }, $sql);
-        }
-
-        return $sql;
+        return $this->parameterBag->prepareSqlStatement($this->sql);
     }
 
     /**
@@ -230,7 +190,7 @@ class RdsDataStatement extends AbstractStatement
             'continueAfterTimeout' => preg_match(self::DDL_REGEX, $this->sql) > 0,
             'database' => $this->connection->getDatabase(),
             'includeResultMetadata' => true,
-            'parameters' => $this->getParameters(),
+            'parameters' => $this->parameterBag->getParameters(),
             'resourceArn' => $this->connection->getResourceArn(), // REQUIRED
             'resultSetOptions' => [
                 'decimalReturnType' => 'STRING',
