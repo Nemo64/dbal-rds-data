@@ -115,6 +115,18 @@ DATABASE_URL=//eu-west-1/mydb?driverOptions[resourceArn]=arn&&driverOptions[secr
 
 Other than the configuration it should work exactly like any other dbal connection.
 
+### Driver options
+
+- `resourceArn` (string; required) this is the ARN of the database cluster.
+  Go into the your [RDS-Management] > your database > Configuration and copy it from there.
+- `secretArn` (string; required) this is the ARN of the secret that stores the database password.
+  Go into the [SecretManager] > your secret and use the Secret ARN.
+- `timeout` (int; default=45) The [timeout setting of guzzle]. Set to 0 for indefinite but that might not be useful.
+  The rds-data api will block for a maximum of 45 seconds (see the [rds-data] docs).
+  Schema update queries will automatically be executed with the `continueAfterTimeout` option.
+  If you need to run long update queries than you might want to use the rds data client directly.
+  Use `$dbalConnection->getWrappedConnection()->getClient()` to get the aws-sdk client.   
+
 ### CloudFormation
 
 Sure, here is a CloudFormation template to configure [Aurora Serverless] and a [Secret],
@@ -204,3 +216,5 @@ This might be [serverless] flavoured but you should get the hang of it.
 [a secret]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.secrets
 [Secret]: https://aws.amazon.com/de/secrets-manager/
 [serverless]: https://serverless.com/
+[RDS-Management]: https://console.aws.amazon.com/rds/home
+[timeout setting of guzzle]: http://docs.guzzlephp.org/en/stable/request-options.html#timeout
