@@ -4,7 +4,7 @@ namespace Nemo64\DbalRdsData;
 
 
 use Aws\RDSDataService\Exception\RDSDataServiceException;
-use Doctrine\DBAL\FetchMode;
+use Doctrine\DBAL\Driver\Statement;
 use Doctrine\DBAL\ParameterType;
 
 /**
@@ -12,7 +12,7 @@ use Doctrine\DBAL\ParameterType;
  * @see https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
  * @see https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_ExecuteStatement.html
  */
-class RdsDataStatement extends AbstractStatement
+class RdsDataStatement implements \IteratorAggregate, Statement
 {
     /**
      * This expression is used to detect DDL queries.
@@ -21,6 +21,7 @@ class RdsDataStatement extends AbstractStatement
      * @see https://en.wikipedia.org/wiki/Data_definition_language
      */
     private const DDL_REGEX = '#^\s*(CREATE|DROP|ALTER|TRUNCATE)\s+(TABLE|INDEX|VIEW)#Si';
+
     /**
      * @var RdsDataConnection
      */
@@ -42,8 +43,7 @@ class RdsDataStatement extends AbstractStatement
     private $sql;
 
     /**
-     * @var \Aws\Result
-     * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-rds-data-2018-08-01.html#executestatement
+     * @var RdsDataResult
      */
     private $result;
 
@@ -61,10 +61,7 @@ class RdsDataStatement extends AbstractStatement
     public function closeCursor(): bool
     {
         // there is not really a cursor but I can free the memory the records are taking up.
-        if (isset($this->result['records'])) {
-            $this->result['records'] = [];
-        }
-
+        $this->result = null;
         return true;
     }
 
@@ -73,7 +70,31 @@ class RdsDataStatement extends AbstractStatement
      */
     public function columnCount(): int
     {
-        return count($this->result['columnMetadata']);
+        return $this->result->columnCount();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setFetchMode($fetchMode, $arg2 = null, $arg3 = null): bool
+    {
+        return $this->result->setFetchMode($fetchMode, $arg2, $arg3);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetchAll($fetchMode = null, $fetchArgument = null, $ctorArgs = null)
+    {
+        return $this->result->fetchAll($fetchMode, $fetchArgument, $ctorArgs);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetchColumn($columnIndex = 0)
+    {
+        return $this->result->fetchColumn($columnIndex);
     }
 
     /**
@@ -81,54 +102,7 @@ class RdsDataStatement extends AbstractStatement
      */
     public function fetch($fetchMode = null, $cursorOrientation = \PDO::FETCH_ORI_NEXT, $cursorOffset = 0)
     {
-        if ($cursorOrientation !== \PDO::FETCH_ORI_NEXT) {
-            throw new \RuntimeException("Cursor direction not implemented");
-        }
-
-        $result = current($this->result['records']);
-        if (!is_array($result)) {
-            return $result;
-        }
-
-        $result = $this->convertResultToFetchMode($result, $fetchMode ?? $this->fetchMode);
-
-        // advance the pointer and return
-        next($this->result['records']);
-        return $result;
-    }
-
-    /**
-     * @param array $result
-     * @param int $fetchMode
-     *
-     * @return array|object
-     */
-    private function convertResultToFetchMode(array $result, int $fetchMode)
-    {
-        $numResult = array_map([$this->dataConverter, 'convertToValue'], $result);
-
-        switch ($fetchMode) {
-            case FetchMode::NUMERIC:
-                return $numResult;
-
-            case FetchMode::ASSOCIATIVE:
-                $columnNames = array_column($this->result['columnMetadata'], 'label');
-                return array_combine($columnNames, $numResult);
-
-            case FetchMode::MIXED:
-                $columnNames = array_column($this->result['columnMetadata'], 'label');
-                return $numResult + array_combine($columnNames, $numResult);
-
-            case FetchMode::STANDARD_OBJECT:
-                $columnNames = array_column($this->result['columnMetadata'], 'label');
-                return (object)array_combine($columnNames, $numResult);
-
-            case FetchMode::COLUMN:
-                return reset($numResult);
-
-            default:
-                throw new \RuntimeException("Fetch mode $fetchMode not supported");
-        }
+        return $this->result->fetch($fetchMode, $cursorOrientation, $cursorOffset);
     }
 
     /**
@@ -137,6 +111,14 @@ class RdsDataStatement extends AbstractStatement
     public function bindParam($column, &$variable, $type = ParameterType::STRING, $length = null): bool
     {
         return $this->parameterBag->bindParam($column, $variable, $type, $length);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function bindValue($param, $value, $type = ParameterType::STRING)
+    {
+        return $this->parameterBag->bindValue($param, $value, $type);
     }
 
     /**
@@ -206,14 +188,12 @@ class RdsDataStatement extends AbstractStatement
         }
 
         try {
-            $this->result = $this->connection->getClient()->executeStatement($args);
+            $result = $this->connection->getClient()->executeStatement($args);
+            $this->result = new RdsDataResult($result, $this->dataConverter);
 
-            if (!empty($this->result['generatedFields'])) {
-                // multiple generated values do not exist in mysql since there can only be one AUTO_INCREMENT column
-                // https://stackoverflow.com/a/7188052
-                $generatedValue = reset($this->result['generatedFields']);
-                $generatedValue = $this->dataConverter->convertToValue($generatedValue);
-                $this->connection->setLastInsertId($generatedValue);
+            $insertedId = $this->result->lastInsertId();
+            if ($insertedId !== null) {
+                $this->connection->setLastInsertId($insertedId);
             }
 
             return true;
@@ -233,10 +213,14 @@ class RdsDataStatement extends AbstractStatement
      */
     public function rowCount(): int
     {
-        if (isset($this->result['numberOfRecordsUpdated'])) {
-            return $this->result['numberOfRecordsUpdated'];
-        }
+        return $this->result->rowCount();
+    }
 
-        return count($this->result['records']);
+    /**
+     * @inheritDoc
+     */
+    public function getIterator()
+    {
+        return $this->result->getIterator();
     }
 }

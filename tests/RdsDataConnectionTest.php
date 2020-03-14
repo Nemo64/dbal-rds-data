@@ -4,6 +4,7 @@ namespace Nemo64\DbalRdsData\Tests;
 
 
 use Aws\RDSDataService\RDSDataServiceClient;
+use Aws\Result;
 use Doctrine\DBAL\FetchMode;
 use Nemo64\DbalRdsData\RdsDataConnection;
 use PHPUnit\Framework\TestCase;
@@ -50,7 +51,7 @@ class RdsDataConnectionTest extends TestCase
 
     private function addClientCall(string $method, array $options, array $result)
     {
-        $this->expectedCalls[] = [$method, $options, $result];
+        $this->expectedCalls[] = [$method, $options, new Result($result)];
     }
 
     public function testSimpleQuery()
