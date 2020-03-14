@@ -62,7 +62,7 @@ class RdsDataStatement extends AbstractStatement
     /**
      * @inheritDoc
      */
-    public function closeCursor()
+    public function closeCursor(): bool
     {
         // there is not really a cursor but I can free the memory the records are taking up.
         if (isset($this->result['records'])) {
@@ -75,7 +75,7 @@ class RdsDataStatement extends AbstractStatement
     /**
      * @inheritDoc
      */
-    public function columnCount()
+    public function columnCount(): int
     {
         return count($this->result['columnMetadata']);
     }
@@ -138,13 +138,14 @@ class RdsDataStatement extends AbstractStatement
     /**
      * @inheritDoc
      */
-    public function bindParam($column, &$variable, $type = ParameterType::STRING, $length = null)
+    public function bindParam($column, &$variable, $type = ParameterType::STRING, $length = null): bool
     {
         if ($length !== null) {
             throw new \RuntimeException("length parameter not implemented.");
         }
 
         $this->parameters[$column] = [&$variable, $type];
+        return true;
     }
 
     /**
@@ -217,7 +218,7 @@ class RdsDataStatement extends AbstractStatement
      * @inheritDoc
      * @throws RdsDataException
      */
-    public function execute($params = null)
+    public function execute($params = null): bool
     {
         if (is_iterable($params)) {
             foreach ($params as $paramKey => $paramValue) {
@@ -255,7 +256,7 @@ class RdsDataStatement extends AbstractStatement
                 $this->connection->setLastInsertId($generatedValue);
             }
 
-            return $this->result['numberOfRecordsUpdated'] ?? 0;
+            return true;
         } catch (RDSDataServiceException $exception) {
             if ($exception->getAwsErrorCode() === 'BadRequestException') {
                 // TODO There is no status code information in the error so it can't be correctly mapped
@@ -270,7 +271,7 @@ class RdsDataStatement extends AbstractStatement
     /**
      * @inheritDoc
      */
-    public function rowCount()
+    public function rowCount(): int
     {
         if (isset($this->result['numberOfRecordsUpdated'])) {
             return $this->result['numberOfRecordsUpdated'];
