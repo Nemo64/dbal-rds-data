@@ -29,34 +29,12 @@ class RdsDataConnectionTest extends TestCase
             ]])
             ->willReturn([
                 "columnMetadata" => [
-                    [
-                        "arrayBaseColumnType" => 0,
-                        "isAutoIncrement" => true,
-                        "isCaseSensitive" => false,
-                        "isCurrency" => false,
-                        "isSigned" => false,
-                        "label" => "id",
-                        "name" => "id",
-                        "nullable" => 0,
-                        "precision" => 64,
-                        "scale" => 0,
-                        "schemaName" => "",
-                        "tableName" => "table",
-                        "type" => 12,
-                        "typeName" => "INT",
-                    ],
+                    ["label" => "id"],
                 ],
                 "numberOfRecordsUpdated" => 0,
                 "records" => [
                     [
-                        [
-                            "longValue" => 1,
-                        ],
-                    ],
-                ],
-                "transferStats" => [
-                    "http" => [
-                        [],
+                        ["longValue" => 1],
                     ],
                 ],
             ]);
