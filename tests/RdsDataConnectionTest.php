@@ -173,4 +173,21 @@ class RdsDataConnectionTest extends TestCase
         $rowCount = $this->connection->exec('UPDATE foobar SET value = 1');
         $this->assertEquals(5, $rowCount);
     }
+
+    public static function quoteValues()
+    {
+        return [
+            ['foobar', "'foobar'"],
+            ['foo\'bar', "'foo\\'bar'"],
+            ['äöü', sprintf("FROM_BASE64('%s')", base64_encode('äöü'))],
+        ];
+    }
+
+    /**
+     * @dataProvider quoteValues
+     */
+    public function testQuote($value, $expectation)
+    {
+        $this->assertEquals($expectation, $this->connection->quote($value));
+    }
 }

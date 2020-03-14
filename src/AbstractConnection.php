@@ -17,9 +17,15 @@ abstract class AbstractConnection implements Connection
      */
     public function quote($input, $type = ParameterType::STRING)
     {
-        // TODO this isn't save against multibyte attacks
-        trigger_error("quote isn't save against multibyte attacks", E_USER_WARNING);
-        return "'" . addslashes($input) . "'";
+        // If the input isn't ASCII then I'm not even gonna try escaping it because of possible multibyte attacks.
+        // I just encode the input as base64 and let mysql decode it again.
+        // I'm not 100% sure this works everywhere but it's better to have a failing query than a security hole.
+        // If you actually need to escape user input: always prefer using parameters.
+        if (mb_detect_encoding($input) !== 'ASCII') {
+            return sprintf("FROM_BASE64('%s')", base64_encode($input));
+        }
+
+        return sprintf("'%s'", addslashes($input));
     }
 
     /**
