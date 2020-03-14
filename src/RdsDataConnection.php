@@ -78,7 +78,7 @@ class RdsDataConnection extends AbstractConnection
      *
      * @internal should only be used by the statement class
      */
-    public function setLastInsertId(string $id)
+    public function setLastInsertId(string $id): void
     {
         $this->lastInsertedId = $id;
     }
@@ -95,7 +95,7 @@ class RdsDataConnection extends AbstractConnection
      * @inheritDoc
      * @see https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_BeginTransaction.html
      */
-    public function beginTransaction()
+    public function beginTransaction(): bool
     {
         if ($this->transactionId !== null) {
             return false;
@@ -116,7 +116,7 @@ class RdsDataConnection extends AbstractConnection
      * @inheritDoc
      * @see https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_CommitTransaction.html
      */
-    public function commit()
+    public function commit(): bool
     {
         if ($this->transactionId === null) {
             return false;
@@ -137,7 +137,7 @@ class RdsDataConnection extends AbstractConnection
      * @inheritDoc
      * @see https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_RollbackTransaction.html
      */
-    public function rollBack()
+    public function rollBack(): bool
     {
         if ($this->transactionId === null) {
             return false;
@@ -157,7 +157,7 @@ class RdsDataConnection extends AbstractConnection
     /**
      * @inheritDoc
      */
-    public function errorCode()
+    public function errorCode(): ?string
     {
         if ($this->lastStatement === null) {
             return null;
@@ -169,10 +169,10 @@ class RdsDataConnection extends AbstractConnection
     /**
      * @inheritDoc
      */
-    public function errorInfo()
+    public function errorInfo(): array
     {
         if ($this->lastStatement === null) {
-            return null;
+            return [];
         }
 
         return $this->lastStatement->errorInfo();

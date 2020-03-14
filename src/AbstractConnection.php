@@ -42,12 +42,17 @@ abstract class AbstractConnection implements Connection
     public function exec($statement): int
     {
         $stmt = $this->prepare($statement);
-        $affectedRows = $stmt->execute();
+        $success = $stmt->execute();
+
         $errorInfo = $stmt->errorInfo();
         if (!empty($errorInfo)) {
             throw new \Exception(reset($errorInfo), $stmt->errorCode());
         }
 
-        return $affectedRows;
+        if (!$success) {
+            return 0;
+        }
+
+        return $stmt->rowCount();
     }
 }
