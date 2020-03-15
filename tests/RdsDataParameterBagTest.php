@@ -18,7 +18,7 @@ class RdsDataParameterBagTest extends TestCase
             [[1 => 1], "SELECT * FROM x WHERE x = ? AND y = `?`", "SELECT * FROM x WHERE x = :1 AND y = `?`"],
             [[1 => 1], 'SELECT * FROM x WHERE x = ? AND y = "?"', 'SELECT * FROM x WHERE x = :1 AND y = "?"'],
             [[1 => 1], "SELECT * FROM x WHERE x = ? AND y = '\\'?'", "SELECT * FROM x WHERE x = :1 AND y = '\\'?'"],
-            [[1 => 1], "SELECT * FROM x WHERE x = '\\\\' AND y = ? AND x = '\\\\'", "SELECT * FROM x WHERE x = '\\\\' AND y = :1 AND z = '\\\\'"],
+            [[1 => 1], "SELECT * FROM x WHERE x = '\\\\' AND y = ? AND z = '\\\\'", "SELECT * FROM x WHERE x = '\\\\' AND y = :1 AND z = '\\\\'"],
             [['foo' => 1], 'SELECT * FROM x WHERE x = ? AND y = "?"', 'SELECT * FROM x WHERE x = ? AND y = "?"'],
         ];
     }
