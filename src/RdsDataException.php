@@ -102,7 +102,7 @@ class RdsDataException extends AbstractDriverException
 
     // this error is custom and specific to aurora serverless proxies
     // i fake it to indicate a socket connection error so implementations will correctly identify a connection error
-    . "|Communications link failure .*(*:2002,CR_CONNECTION_ERROR)"
+    . "|Communications link failure.*(*:2002,CR_CONNECTION_ERROR)"
 
     . ")$#";
 
