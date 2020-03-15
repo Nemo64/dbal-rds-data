@@ -224,7 +224,7 @@ If an [Aurora Serverless] is paused, you'll get this error message:
 I mapped this error message to error code `6000` (server errors are 1xxx and client errors 2xxx).
 It'll also be converted to dbal's `Doctrine\DBAL\Exception\ConnectionException`
 which existing application might already handle gracefully.
-But the most important thing is that you can catch and handle it in your application
+But the most important thing is that you can catch and handle code `6000` specifically
 to better tell your user that the database is paused and will probably be available soon. 
 
 
