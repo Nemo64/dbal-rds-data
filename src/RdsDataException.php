@@ -99,8 +99,8 @@ class RdsDataException extends AbstractDriverException
     . "|(*:1701,ER_TRUNCATE_ILLEGAL_FK)Cannot truncate a table referenced in a foreign key constraint \\(.*\\)"
 
     // this error is custom and specific to aurora serverless proxies
-    // i fake it to indicate a socket connection error so implementations will correctly identify a connection error
-    . "|(*:2002,CR_CONNECTION_ERROR)Communications link failure.*"
+    // I decided to use 6xxx error codes for proxy errors since server errors are 1xxx and client errors 2xxx
+    . "|(*:6000,PR_CONNECTION_ERROR)Communications link failure.*"
 
     . ")$#s"; // note the PCRE_DOTALL modifier
 

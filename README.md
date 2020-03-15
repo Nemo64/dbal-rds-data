@@ -221,9 +221,9 @@ If an [Aurora Serverless] is paused, you'll get this error message:
 > Communications link failure The last packet sent successfully to the server was 0 milliseconds ago.
 > The driver has not received any packets from the server.
 
-I mapped this error message to [error code `2002`] which is normally a socket connection error
-but this will cause the dbal's `Doctrine\DBAL\Driver\AbstractMySQLDriver::convertException` to map this error
-to an `Doctrine\DBAL\Exception\ConnectionException` which existing application might already handle gracefully.
+I mapped this error message to error code `6000` (server errors are 1xxx and client errors 2xxx).
+It'll also be converted to dbal's `Doctrine\DBAL\Exception\ConnectionException`
+which existing application might already handle gracefully.
 But the most important thing is that you can catch and handle it in your application
 to better tell your user that the database is paused and will probably be available soon. 
 
@@ -243,4 +243,4 @@ to better tell your user that the database is paused and will probably be availa
 [timeout setting of guzzle]: http://docs.guzzlephp.org/en/stable/request-options.html#timeout
 [mysql error documentation]: https://dev.mysql.com/doc/refman/5.6/en/server-error-reference.html
 [amazon developer forum]: https://forums.aws.amazon.com/thread.jspa?threadID=317595
-[error code `2002`]: https://dev.mysql.com/doc/refman/5.6/en/client-error-reference.html#error_cr_connection_error
+[error code `2002`]: https://dv.mysql.com/doc/refman/5.6/en/client-error-reference.html#error_cr_connection_error
