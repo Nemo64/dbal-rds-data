@@ -16,6 +16,11 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
 
+      - uses: actions/cache@v1
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ runner.os }}-composer
+
       - uses: actions/checkout@v2
 
       - name: Validate composer.json and composer.lock
