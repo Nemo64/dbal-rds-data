@@ -8,7 +8,7 @@ use Doctrine\DBAL\Driver\AbstractDriverException;
 /**
  * Class RdsDataException
  *
- * The rds data api does only provide the error message, not the error type.
+ * The rds data api does only provide the error message, not the error code.
  * This exception fixes this by extracting the error code from the message.
  *
  * @see https://forums.aws.amazon.com/thread.jspa?threadID=317595
@@ -102,7 +102,7 @@ class RdsDataException extends AbstractDriverException
     // i fake it to indicate a socket connection error so implementations will correctly identify a connection error
     . "|(*:2002,CR_CONNECTION_ERROR)Communications link failure.*"
 
-    . ")$#";
+    . ")$#s"; // note the PCRE_DOTALL modifier
 
     public function __construct($message, $sqlState = null, $errorCode = null)
     {
