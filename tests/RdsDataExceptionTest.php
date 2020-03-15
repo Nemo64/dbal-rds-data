@@ -17,6 +17,7 @@ class RdsDataExceptionTest extends TestCase
             ["Cannot truncate a table referenced in a foreign key constraint (foobar)", 1701, 'ER_TRUNCATE_ILLEGAL_FK'],
             // this is a specific rds proxy error
             ["Communications link failure The last packet sent successfully to the server was 0 milliseconds ago. The driver has not received any packets from the server.", 2002, 'CR_CONNECTION_ERROR'],
+            ["Some never before seen of error", null, null],
         ];
     }
 
