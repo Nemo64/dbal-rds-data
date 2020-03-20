@@ -31,7 +31,8 @@ I tested the schema tools, migrations and transactions.
   
 ## Why wouldn't you use it?
 
-- This implementation isn't well tested. Be prepared for problems.
+- This implementation isn't battle tested. Be prepared for problems. Have a look into the
+  [Implementation Details](#implementation-details) section and see if you are comfortable with them.
 - The [rds-data] api has size restrictions in the [ExecuteStatement] call
   which might become a problem when your application grows.
   I have ideas how to work around that but there is nothing implemented yet.
@@ -227,7 +228,26 @@ I mapped this error message to error code `6000` (server errors are 1xxx and cli
 It'll also be converted to dbal's `Doctrine\DBAL\Exception\ConnectionException`
 which existing application might already handle gracefully.
 But the most important thing is that you can catch and handle code `6000` specifically
-to better tell your user that the database is paused and will probably be available soon. 
+to better tell your user that the database is paused and will probably be available soon.
+
+### Parameters in prepared statements
+
+While [ExecuteStatement] does support parameters, it only supports named parameters.
+Question mark placeholders need to be emulated (which is funny because
+the `mysqli` driver only supports question mark placeholders and no named parameters).
+This is achieved by replacing `?` with `:1`, `:2` etc.
+The replacement algorithm will avoid replacing `?` within string literals but be aware that you
+shouldn't mix heavy string literals and question mark placeholders, just to be safe.
+
+### String literals
+
+Every driver has some form of connection aware literal string escape function.
+But because the rds-data api is connectionless, it doesn't have such a method (except for parameters of course).
+To emulate the escape feature, a check for none ASCII characters is performed.
+If the string is pure ASCII it'll just pass though `addslashes` and gets quotes.
+If it has more exotic characters it'll be base64 encoded to prevent any chance of multibyte sql injection attacks.
+This should work transparently in most situations but you should definitely avoid using the `literal` function
+and instead use parameter binding whenever possible. 
 
 
 [rds-data]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
