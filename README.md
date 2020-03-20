@@ -210,7 +210,7 @@ This might be [serverless] flavoured but you should get the hang of it.
 
 The rds data api only provides error messages, not error codes.
 To correctly map those errors to dbal exceptions I use a huge regular expression.
-See: `\Nemo64\DbalRdsData\RdsDataException::EXPRESSION`.
+See: [`Nemo64\DbalRdsData\RdsDataException::EXPRESSION`](src/RdsDataException.php#L49).
 Since most of it is generated using the [mysql error documentation],
 it should be fine but it might not be 100% reliable.
 I asked for this in the [amazon developer forum] but haven't gotten a response yet.
