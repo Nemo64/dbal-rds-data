@@ -3,7 +3,7 @@
 [![Packagist License](https://img.shields.io/packagist/l/Nemo64/dbal-rds-data)](https://github.com/Nemo64/dbal-rds-data/blob/master/LICENSE)
 [![Packagist Downloads](https://img.shields.io/packagist/dm/Nemo64/dbal-rds-data)](https://packagist.org/packages/nemo64/dbal-rds-data)
 
-# doctrine driver for the rds data api
+# doctrine driver for the Aurora Serverless rds data api
 
 This is a driver to use the aws [rds-data] api on projects
 that are using [dbal] for their database access.
