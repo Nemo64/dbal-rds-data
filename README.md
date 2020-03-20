@@ -265,4 +265,3 @@ and instead use parameter binding whenever possible.
 [timeout setting of guzzle]: http://docs.guzzlephp.org/en/stable/request-options.html#timeout
 [mysql error documentation]: https://dev.mysql.com/doc/refman/5.6/en/server-error-reference.html
 [amazon developer forum]: https://forums.aws.amazon.com/thread.jspa?threadID=317595
-[error code `2002`]: https://dv.mysql.com/doc/refman/5.6/en/client-error-reference.html#error_cr_connection_error
