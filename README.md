@@ -208,7 +208,7 @@ This might be [serverless] flavoured but you should get the hang of it.
 
 ### Error handling
 
-The rds data api does only provide error messages, not error codes.
+The rds data api only provides error messages, not error codes.
 To correctly map those errors to dbal exceptions I use a huge regular expression.
 See: `\Nemo64\DbalRdsData\RdsDataException::EXPRESSION`.
 Since most of it is generated using the [mysql error documentation],
