@@ -164,7 +164,7 @@ This might be [serverless] flavoured but you should get the hang of it.
       - ''
       - - '//' # rds-data is set to default because custom drivers can't be named in a way that they can be used here
         - !Ref AWS::Region # the hostname is the region
-        - '/database'
+        - '/mydb'
         - '?driverOptions[resourceArn]='
         - !Join [':', ['arn:aws:rds', !Ref AWS::Region, !Ref AWS::AccountId, 'cluster', !Ref Database]]
         - '&driverOptions[secretArn]='
@@ -182,7 +182,7 @@ This might be [serverless] flavoured but you should get the hang of it.
       Engine: aurora
       EngineMode: serverless
       EnableHttpEndpoint: true # https://stackoverflow.com/a/58759313 (not fully documented in every language yet)
-      DatabaseName: 'database'
+      DatabaseName: 'mydb'
       MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabasePassword, ':SecretString:username}}']]
       MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabasePassword, ':SecretString:password}}']]
       BackupRetentionPeriod: 1 # day
