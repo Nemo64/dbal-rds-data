@@ -218,7 +218,9 @@ I asked for this in the [amazon developer forum] but haven't gotten a response y
 ### Paused databases
 
 If an [Aurora Serverless] is paused, you'll get this error message:
-> Communications link failure The last packet sent successfully to the server was 0 milliseconds ago.
+> Communications link failure
+> 
+> The last packet sent successfully to the server was 0 milliseconds ago.
 > The driver has not received any packets from the server.
 
 I mapped this error message to error code `6000` (server errors are 1xxx and client errors 2xxx).
