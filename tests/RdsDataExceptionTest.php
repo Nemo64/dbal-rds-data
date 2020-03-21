@@ -57,7 +57,7 @@ class RdsDataExceptionTest extends TestCase
      */
     public function testMessageParsing($message, $expectedCode, $expectedException)
     {
-        $exception = new RdsDataException($message);
+        $exception = RdsDataException::interpretErrorMessage($message);
         $this->assertEquals($expectedCode, $exception->getErrorCode());
 
         $driver = new RdsDataDriver();

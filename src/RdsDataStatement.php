@@ -199,7 +199,7 @@ class RdsDataStatement implements \IteratorAggregate, Statement
             return true;
         } catch (RDSDataServiceException $exception) {
             if ($exception->getAwsErrorCode() === 'BadRequestException') {
-                throw new RdsDataException($exception->getAwsErrorMessage());
+                throw RdsDataException::interpretErrorMessage($exception->getAwsErrorMessage());
             }
 
             throw $exception;

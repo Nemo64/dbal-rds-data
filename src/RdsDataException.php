@@ -104,13 +104,12 @@ class RdsDataException extends AbstractDriverException
 
     . ")$#s"; // note the PCRE_DOTALL modifier
 
-    public function __construct($message, $sqlState = null, $errorCode = null)
+    public static function interpretErrorMessage(string $message): self
     {
-        if ($errorCode === null && preg_match(self::EXPRESSION, $message, $match)) {
-            $errorCode = $match['MARK'];
+        if (preg_match(self::EXPRESSION, $message, $match)) {
+            return new self($message, null, $match['MARK']);
         }
 
-        parent::__construct($message, $sqlState, $errorCode);
+        return new self($message);
     }
-
 }
