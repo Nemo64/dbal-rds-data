@@ -21,9 +21,9 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
     private $dataConverter;
 
     /**
-     * @var int
+     * @var array
      */
-    private $fetchMode = FetchMode::MIXED;
+    private $fetchMode = [FetchMode::MIXED, null];
 
     public function __construct(Result $result, RdsDataConverter $dataConverter = null)
     {
@@ -36,7 +36,7 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
      */
     public function setFetchMode($fetchMode, $arg2 = null, $arg3 = null): bool
     {
-        $this->fetchMode = $fetchMode;
+        $this->fetchMode = func_get_args();
         return true;
     }
 
@@ -62,7 +62,8 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
             return $result;
         }
 
-        $result = $this->convertResultToFetchMode($result, $fetchMode ?? $this->fetchMode);
+        $fetchMode = $fetchMode !== null ? [$fetchMode, null] : $this->fetchMode;
+        $result = $this->convertResultToFetchMode($result, ...$fetchMode);
 
         // advance the pointer and return
         next($this->result['records']);
@@ -74,14 +75,13 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
      */
     public function fetchAll($fetchMode = null, $fetchArgument = null, $ctorArgs = null)
     {
-        if ($fetchArgument !== null || $ctorArgs !== null) {
-            throw new \RuntimeException('$fetchArgument and $ctorArgs are not supported.');
+        $previousFetchMode =  $this->fetchMode;
+        if ($fetchMode !== null) {
+            $this->setFetchMode($fetchMode, $fetchArgument, $ctorArgs);
         }
 
-        $result = [];
-        while (($row = $this->fetch($fetchMode)) !== false) {
-            $result[] = $row;
-        }
+        $result = iterator_to_array($this);
+        $this->setFetchMode(...$previousFetchMode);
 
         return $result;
     }
@@ -91,7 +91,7 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
      */
     public function fetchColumn($columnIndex = 0)
     {
-        return $this->fetch(FetchMode::COLUMN);
+        return $this->fetch(FetchMode::NUMERIC)[$columnIndex];
     }
 
     /**
@@ -101,40 +101,6 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
     {
         while (($row = $this->fetch()) !== false) {
             yield $row;
-        }
-    }
-
-    /**
-     * @param array $result
-     * @param int $fetchMode
-     *
-     * @return array|object
-     */
-    private function convertResultToFetchMode(array $result, int $fetchMode)
-    {
-        $numResult = array_map([$this->dataConverter, 'convertToValue'], $result);
-
-        switch ($fetchMode) {
-            case FetchMode::NUMERIC:
-                return $numResult;
-
-            case FetchMode::ASSOCIATIVE:
-                $columnNames = array_column($this->result['columnMetadata'], 'label');
-                return array_combine($columnNames, $numResult);
-
-            case FetchMode::MIXED:
-                $columnNames = array_column($this->result['columnMetadata'], 'label');
-                return $numResult + array_combine($columnNames, $numResult);
-
-            case FetchMode::STANDARD_OBJECT:
-                $columnNames = array_column($this->result['columnMetadata'], 'label');
-                return (object)array_combine($columnNames, $numResult);
-
-            case FetchMode::COLUMN:
-                return reset($numResult);
-
-            default:
-                throw new \RuntimeException("Fetch mode $fetchMode not supported");
         }
     }
 
@@ -164,5 +130,73 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
         }
 
         return 0;
+    }
+
+    /**
+     * @param array $result
+     * @param int $fetchMode
+     * @param mixed $fetchArgument
+     * @param null|array $ctorArgs
+     *
+     * @return array|object
+     * @throws RdsDataException
+     */
+    private function convertResultToFetchMode(array $result, int $fetchMode, $fetchArgument = null, $ctorArgs = null)
+    {
+        $numResult = array_map([$this->dataConverter, 'convertToValue'], $result);
+
+        switch ($fetchMode) {
+            case FetchMode::NUMERIC:
+                return $numResult;
+
+            case FetchMode::ASSOCIATIVE:
+                $columnNames = array_column($this->result['columnMetadata'], 'label');
+                return array_combine($columnNames, $numResult);
+
+            case FetchMode::MIXED:
+                $columnNames = array_column($this->result['columnMetadata'], 'label');
+                return $numResult + array_combine($columnNames, $numResult);
+
+            case FetchMode::STANDARD_OBJECT:
+                $columnNames = array_column($this->result['columnMetadata'], 'label');
+                return (object)array_combine($columnNames, $numResult);
+
+            case FetchMode::COLUMN:
+                return $numResult[$fetchArgument ?? 0];
+
+            case FetchMode::CUSTOM_OBJECT:
+                try {
+                    $class = new \ReflectionClass($fetchArgument);
+                    $result = $class->newInstanceWithoutConstructor();
+
+                    self::mapProperties($class, $result, $this->result['columnMetadata'], $numResult);
+
+                    $constructor = $class->getConstructor();
+                    if ($constructor !== null) {
+                        $constructor->invokeArgs($result, (array)$ctorArgs);
+                    }
+
+                    return $result;
+                } catch (\ReflectionException $e) {
+                    throw new RdsDataException("could not fetch as class '$fetchArgument': {$e->getMessage()}", 0, $e);
+                }
+
+            default:
+                throw new \RuntimeException("Fetch mode $fetchMode not supported");
+        }
+    }
+
+    private static function mapProperties(\ReflectionClass $class, $result, array $metadata, array $numResult)
+    {
+        foreach ($metadata as $columnIndex => ['label' => $columnName]) {
+            if ($class->hasProperty($columnName)) {
+                $property = $class->getProperty($columnName);
+                $property->setAccessible(true);
+                $property->setValue($result, $numResult[$columnIndex]);
+                continue;
+            }
+
+            $result->{$columnName} = $numResult[$columnIndex];
+        }
     }
 }
