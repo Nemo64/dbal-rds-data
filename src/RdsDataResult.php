@@ -91,7 +91,12 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
      */
     public function fetchColumn($columnIndex = 0)
     {
-        return $this->fetch(FetchMode::NUMERIC)[$columnIndex];
+        $row = $this->fetch(FetchMode::NUMERIC);
+        if (!is_array($row)) {
+            return false;
+        }
+
+        return $row[$columnIndex] ?? false;
     }
 
     /**
