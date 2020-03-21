@@ -216,4 +216,33 @@ class RdsDataConnectionTest extends TestCase
     {
         $this->assertEquals($expectation, $this->connection->quote($value));
     }
+
+    public function testInsert()
+    {
+
+        $this->addClientCall(
+            'executeStatement',
+            self::DEFAULT_OPTIONS + [
+                'database' => 'db',
+                'continueAfterTimeout' => false,
+                'includeResultMetadata' => true,
+                'parameters' => [
+                    ['name' => '0', 'value' => ['stringValue' => 5]],
+                ],
+                'resultSetOptions' => ['decimalReturnType' => 'STRING'],
+                'sql' => 'INSERT INTO foobar SET value = :0',
+            ],
+            [
+                'numberOfRecordsUpdated' => 1,
+                'generatedFields' => [
+                    ['longValue' => 5]
+                ]
+            ]
+        );
+
+        $statement = $this->connection->prepare('INSERT INTO foobar SET value = ?');
+        $statement->execute([5]);
+        $this->assertEquals(1, $statement->rowCount());
+        $this->assertEquals(5, $this->connection->lastInsertId());
+    }
 }

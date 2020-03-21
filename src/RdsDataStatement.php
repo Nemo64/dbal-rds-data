@@ -189,13 +189,13 @@ class RdsDataStatement implements \IteratorAggregate, Statement
 
         try {
             $result = $this->connection->getClient()->executeStatement($args);
-            $this->result = new RdsDataResult($result, $this->dataConverter);
 
-            $insertedId = $this->result->lastInsertId();
-            if ($insertedId !== null) {
-                $this->connection->setLastInsertId($insertedId);
+            if (!empty($result['generatedFields'])) {
+                $generatedValue = $this->dataConverter->convertToValue(reset($result['generatedFields']));
+                $this->connection->setLastInsertId($generatedValue);
             }
 
+            $this->result = new RdsDataResult($result, $this->dataConverter);
             return true;
         } catch (RDSDataServiceException $exception) {
             if ($exception->getAwsErrorCode() === 'BadRequestException') {

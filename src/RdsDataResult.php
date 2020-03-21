@@ -41,27 +41,6 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
     }
 
     /**
-     * This method is used to fill lastInsertId of the connection.
-     *
-     * @param string|null $name
-     *
-     * @return string|null
-     * @see \Nemo64\DbalRdsData\RdsDataConnection::lastInsertId
-     * @internal
-     */
-    public function lastInsertId($name = null): ?string
-    {
-        if (empty($this->result['generatedFields'])) {
-            return null;
-        }
-
-        // multiple generated values do not exist in mysql since there can only be one AUTO_INCREMENT column
-        // https://stackoverflow.com/a/7188052
-        $generatedValue = reset($this->result['generatedFields']);
-        return $this->dataConverter->convertToValue($generatedValue);
-    }
-
-    /**
      * @inheritDoc
      */
     public function columnCount(): int
