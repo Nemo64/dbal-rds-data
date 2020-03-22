@@ -5,6 +5,7 @@ namespace Nemo64\DbalRdsData;
 
 use Aws\RDSDataService\Exception\RDSDataServiceException;
 use Doctrine\DBAL\Driver\Statement;
+use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\ParameterType;
 
 /**
@@ -43,6 +44,13 @@ class RdsDataStatement implements \IteratorAggregate, Statement
     private $sql;
 
     /**
+     * Retain the fetch mode across results
+     *
+     * @var array
+     */
+    private $fetchMode = [FetchMode::MIXED];
+
+    /**
      * @var RdsDataResult
      */
     private $result;
@@ -78,7 +86,13 @@ class RdsDataStatement implements \IteratorAggregate, Statement
      */
     public function setFetchMode($fetchMode, $arg2 = null, $arg3 = null): bool
     {
-        return $this->result->setFetchMode($fetchMode, $arg2, $arg3);
+        $this->fetchMode = func_get_args();
+
+        if ($this->result !== null) {
+            $this->result->setFetchMode(...$this->fetchMode);
+        }
+
+        return true;
     }
 
     /**
@@ -196,6 +210,7 @@ class RdsDataStatement implements \IteratorAggregate, Statement
             }
 
             $this->result = new RdsDataResult($result, $this->dataConverter);
+            $this->result->setFetchMode(...$this->fetchMode);
             return true;
         } catch (RDSDataServiceException $exception) {
             if ($exception->getAwsErrorCode() === 'BadRequestException') {

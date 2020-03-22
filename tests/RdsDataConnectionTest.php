@@ -3,62 +3,25 @@
 namespace Nemo64\DbalRdsData\Tests;
 
 
-use Aws\RDSDataService\RDSDataServiceClient;
-use Aws\Result;
 use Doctrine\DBAL\FetchMode;
-use Nemo64\DbalRdsData\RdsDataConnection;
 use PHPUnit\Framework\TestCase;
 
 class RdsDataConnectionTest extends TestCase
 {
-    private const DEFAULT_OPTIONS = [
-        'resourceArn' => 'resource_arm',
-        'secretArn' => 'secret_arm',
-    ];
-
-    /**
-     * @var \PHPUnit\Framework\MockObject\MockObject|RDSDataServiceClient
-     */
-    private $client;
-
-    private $expectedCalls = [
-        // ['executeStatement', ['options' => 'value'], 'returnValue']
-    ];
-
-    /**
-     * @var RdsDataConnection
-     */
-    private $connection;
+    use RdsDataServiceClientTrait;
 
     protected function setUp()
     {
-        $this->client = $this->createMock(RDSDataServiceClient::class);
-        $this->client->method('__call')->willReturnCallback(function ($methodName, $arguments) {
-            $nextCall = array_shift($this->expectedCalls);
-            $this->assertIsArray($nextCall, "there must be another call planned");
-            $this->assertEquals($nextCall[0], $methodName, "method call");
-            $this->assertEquals($nextCall[1], $arguments[0], "options of $methodName");
-            return $nextCall[2];
-        });
-
-        $this->connection = new RdsDataConnection(
-            $this->client,
-            self::DEFAULT_OPTIONS['resourceArn'],
-            self::DEFAULT_OPTIONS['secretArn'],
-            'db'
-        );
-    }
-
-    private function addClientCall(string $method, array $options, array $result)
-    {
-        $this->expectedCalls[] = [$method, $options, new Result($result)];
+        $this->createRdsDataServiceClient();
     }
 
     public function testSimpleQuery()
     {
         $this->addClientCall(
             'executeStatement',
-            self::DEFAULT_OPTIONS + [
+            [
+                'resourceArn' => 'arn:resource',
+                'secretArn' => 'arn:secret',
                 'database' => 'db',
                 'continueAfterTimeout' => false,
                 'includeResultMetadata' => true,
@@ -88,7 +51,11 @@ class RdsDataConnectionTest extends TestCase
     {
         $this->addClientCall(
             'beginTransaction',
-            self::DEFAULT_OPTIONS + ['database' => 'db'],
+            [
+                'resourceArn' => 'arn:resource',
+                'secretArn' => 'arn:secret',
+                'database' => 'db',
+            ],
             ['transactionId' => '~~transaction id~~']
         );
         $this->assertTrue($this->connection->beginTransaction());
@@ -96,7 +63,9 @@ class RdsDataConnectionTest extends TestCase
 
         $this->addClientCall(
             'executeStatement',
-            self::DEFAULT_OPTIONS + [
+            [
+                'resourceArn' => 'arn:resource',
+                'secretArn' => 'arn:secret',
                 'database' => 'db',
                 'continueAfterTimeout' => false,
                 'includeResultMetadata' => true,
@@ -125,7 +94,11 @@ class RdsDataConnectionTest extends TestCase
 
         $this->addClientCall(
             'commitTransaction',
-            self::DEFAULT_OPTIONS + ['transactionId' => '~~transaction id~~'],
+            [
+                'resourceArn' => 'arn:resource',
+                'secretArn' => 'arn:secret',
+                'transactionId' => '~~transaction id~~',
+            ],
             ['transactionStatus' => 'cleaning up']
         );
         $this->assertTrue($this->connection->commit());
@@ -137,7 +110,11 @@ class RdsDataConnectionTest extends TestCase
     {
         $this->addClientCall(
             'beginTransaction',
-            self::DEFAULT_OPTIONS + ['database' => 'db'],
+            [
+                'resourceArn' => 'arn:resource',
+                'secretArn' => 'arn:secret',
+                'database' => 'db',
+            ],
             ['transactionId' => '~~transaction id~~']
         );
         $this->assertTrue($this->connection->beginTransaction());
@@ -146,7 +123,11 @@ class RdsDataConnectionTest extends TestCase
 
         $this->addClientCall(
             'rollbackTransaction',
-            self::DEFAULT_OPTIONS + ['transactionId' => '~~transaction id~~'],
+            [
+                'resourceArn' => 'arn:resource',
+                'secretArn' => 'arn:secret',
+                'transactionId' => '~~transaction id~~',
+            ],
             ['transactionStatus' => 'cleaning up']
         );
         $this->assertTrue($this->connection->rollBack());
@@ -158,7 +139,9 @@ class RdsDataConnectionTest extends TestCase
     {
         $this->addClientCall(
             'executeStatement',
-            self::DEFAULT_OPTIONS + [
+            [
+                'resourceArn' => 'arn:resource',
+                'secretArn' => 'arn:secret',
                 'database' => 'db',
                 'continueAfterTimeout' => false,
                 'includeResultMetadata' => true,
@@ -179,7 +162,9 @@ class RdsDataConnectionTest extends TestCase
     {
         $this->addClientCall(
             'executeStatement',
-            self::DEFAULT_OPTIONS + [
+            [
+                'resourceArn' => 'arn:resource',
+                'secretArn' => 'arn:secret',
                 'database' => 'db',
                 'continueAfterTimeout' => false,
                 'includeResultMetadata' => true,
@@ -222,7 +207,9 @@ class RdsDataConnectionTest extends TestCase
 
         $this->addClientCall(
             'executeStatement',
-            self::DEFAULT_OPTIONS + [
+            [
+                'resourceArn' => 'arn:resource',
+                'secretArn' => 'arn:secret',
                 'database' => 'db',
                 'continueAfterTimeout' => false,
                 'includeResultMetadata' => true,
