@@ -153,7 +153,7 @@ This might be [serverless] flavoured but you should get the hang of it.
     # this rds-data endpoint will use the same identity to get the secret 
     # so you need to be able to read the password secret
     - Effect: Allow
-      Resource: !Ref DatabasePassword
+      Resource: !Ref DatabaseSecret
       Action:
         # https://docs.aws.amazon.com/IAM/latest/UserGuide/list_awssecretsmanager.html
         - secretsmanager:GetSecretValue
@@ -169,7 +169,7 @@ This might be [serverless] flavoured but you should get the hang of it.
         - '?driverOptions[resourceArn]='
         - !Join [':', ['arn:aws:rds', !Ref AWS::Region, !Ref AWS::AccountId, 'cluster', !Ref Database]]
         - '&driverOptions[secretArn]='
-        - !Ref DatabasePassword
+        - !Ref DatabaseSecret
 
 # [...]
 
@@ -184,12 +184,12 @@ This might be [serverless] flavoured but you should get the hang of it.
       EngineMode: serverless
       EnableHttpEndpoint: true # https://stackoverflow.com/a/58759313 (not fully documented in every language yet)
       DatabaseName: 'mydb'
-      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabasePassword, ':SecretString:username}}']]
-      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabasePassword, ':SecretString:password}}']]
+      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabaseSecret, ':SecretString:username}}']]
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabaseSecret, ':SecretString:password}}']]
       BackupRetentionPeriod: 1 # day
       # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-rds-dbcluster-scalingconfiguration.html
       ScalingConfiguration: {MinCapacity: 1, MaxCapactiy: 2, AutoPause: true}
-  DatabasePassword:
+  DatabaseSecret:
     Type: AWS::SecretsManager::Secret # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-secretsmanager-secret.html
     Properties:
       GenerateSecretString:
@@ -200,7 +200,7 @@ This might be [serverless] flavoured but you should get the hang of it.
   DatabaseSecretAttachment:
     Type: AWS::SecretsManager::SecretTargetAttachment # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-secretsmanager-secrettargetattachment.html
     Properties:
-      SecretId: !Ref DatabasePassword
+      SecretId: !Ref DatabaseSecret
       TargetId: !Ref Database
       TargetType: AWS::RDS::DBCluster
 ```
