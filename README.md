@@ -105,7 +105,7 @@ doctrine:
 
 # you must not include a driver in the database url
 # in this case I also didn't include the aws tokens in the url 
-DATABASE_URL=//eu-west-1/mydb?driverOptions[resourceArn]=arn&&driverOptions[secretArn]=arn
+DATABASE_URL=//eu-west-1/mydb?driverOptions[resourceArn]=arn&driverOptions[secretArn]=arn
 
 # the aws-sdk will pick those up
 # they are automatically configured in lambda and ec2 environments 
