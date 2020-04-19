@@ -38,6 +38,10 @@ I tested the schema tools, migrations and transactions.
   I have ideas how to work around that but there is nothing implemented yet.
 - The [rds-data] api is currently only available in [a few regions]. This limitation can be lifted any day though.
   However, at the moment of writing this, there is only 1 region in europe available.
+- The [rds-data] api has some inherit limitations base on the fact that it is mostly stateless.
+  The biggest problem is that you can't set (session) variables.
+  This also means you can't [setTransactionIsolation] levels although that is an optional feature in dbal anyways.
+  You can still use normal locking in transactions though.
 - The [rds-data] api is only available with [Aurora Serverless] and this library also limits you to MySQL mode.
   If you plan on using other databases then you can't use the rds-data api and this library (yet).
   Here are alternatives you might want to consider:
@@ -46,8 +50,8 @@ I tested the schema tools, migrations and transactions.
   - Aurora Global for better availability and all the benefits of Aurora Classic
   - or even normal RDS to save money or use engines that are not emulated by Aurora 
   
-All those disadvantages are not inherit to the new technology and can be removed
-either by progress from AWS or by progress on this library.
+Those are a lot of disadvantages, and the list is probably not complete.
+But don't be afraid of it. If you are using the doctrine/orm you'll likely not encounter any problems at all.
 
 ## How to use it
 
@@ -255,6 +259,7 @@ and instead use parameter binding whenever possible.
 [bref]: https://bref.sh/
 [ExecuteStatement]: https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_ExecuteStatement.html
 [a few regions]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions
+[setTransactionIsolation]: https://www.doctrine-project.org/projects/doctrine-dbal/en/2.10/reference/transactions.html
 [Aurora Serverless]: https://aws.amazon.com/de/rds/aurora/serverless/
 [SLA]: https://aws.amazon.com/de/rds/aurora/sla/
 [access to your database]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.access
