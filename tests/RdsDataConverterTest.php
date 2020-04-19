@@ -30,11 +30,6 @@ class RdsDataConverterTest extends TestCase
     {
         $converter = new RdsDataConverter();
         $convertedValue = $converter->convertToValue($json);
-
-        if (is_resource($convertedValue)) {
-            $convertedValue = stream_get_contents($convertedValue);
-        }
-
         $this->assertEquals($php, $convertedValue);
     }
 

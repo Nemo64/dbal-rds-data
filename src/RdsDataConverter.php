@@ -64,10 +64,7 @@ class RdsDataConverter
                 return null;
 
             case 'blobValue':
-                $resource = fopen('php://temp', 'rb+');
-                fwrite($resource, base64_decode($value));
-                rewind($resource);
-                return $resource;
+                return base64_decode($value);
 
             case 'arrayValue':
                 throw new \RuntimeException("arrayValue is not implemented.");
