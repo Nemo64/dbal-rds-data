@@ -3,12 +3,10 @@
 namespace Nemo64\DbalRdsData;
 
 
-use Aws\Handler\GuzzleV6\GuzzleHandler;
-use Aws\RDSDataService\RDSDataServiceClient;
+use AsyncAws\RDSDataService\RDSDataServiceClient;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\DriverException;
 use Doctrine\DBAL\Exception AS DBALException;
-use GuzzleHttp\Client;
 
 class RdsDataDriver extends Driver\AbstractMySQLDriver
 {
@@ -17,31 +15,23 @@ class RdsDataDriver extends Driver\AbstractMySQLDriver
      */
     public function connect(array $params, $username = null, $password = null, array $driverOptions = []): Driver\Connection
     {
-        $options = [
-            'version' => '2018-08-01',
-            'region' => $params['host'],
-        ];
+        $options = ['region' => $params['host']];
 
         if ($username !== null && $username !== 'root') {
-            $options['credentials']['key'] = $username;
+            $options['accessKeyId'] = $username;
         }
 
         if ($password !== null) {
-            $options['credentials']['secret'] = $password;
+            $options['accessKeySecret'] = $password;
         }
 
-        $options['http_handler'] = new GuzzleHandler(new Client([
-            // all calls to the data-api will time out after 45 seconds
-            // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
-            'timeout' => $driverOptions['timeout'] ?? 45,
-        ]));
+        $resourceArn = $driverOptions['resourceArn'];
+        $secretArn = $driverOptions['secretArn'];
+        unset($driverOptions['resourceArn']);
+        unset($driverOptions['secretArn']);
 
-        return new RdsDataConnection(
-            new RDSDataServiceClient($options),
-            $driverOptions['resourceArn'],
-            $driverOptions['secretArn'],
-            $params['dbname']
-        );
+        $client = new RDSDataServiceClient($driverOptions + $options);
+        return new RdsDataConnection($client, $resourceArn, $secretArn, $params['dbname']);
     }
 
     /**

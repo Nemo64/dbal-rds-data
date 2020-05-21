@@ -3,7 +3,7 @@
 namespace Nemo64\DbalRdsData;
 
 
-use Aws\RDSDataService\RDSDataServiceClient;
+use AsyncAws\RDSDataService\RDSDataServiceClient;
 use Doctrine\DBAL\Driver\Statement;
 
 class RdsDataConnection extends AbstractConnection
@@ -108,7 +108,7 @@ class RdsDataConnection extends AbstractConnection
         ];
 
         $response = $this->client->beginTransaction($args);
-        $this->transactionId = $response['transactionId'];
+        $this->transactionId = $response->getTransactionId();
         return true;
     }
 
@@ -128,7 +128,7 @@ class RdsDataConnection extends AbstractConnection
             'transactionId' => $this->transactionId,
         ];
 
-        $this->client->commitTransaction($args);
+        $this->client->commitTransaction($args)->resolve();
         $this->transactionId = null;
         return true;
     }
@@ -149,7 +149,7 @@ class RdsDataConnection extends AbstractConnection
             'transactionId' => $this->transactionId,
         ];
 
-        $this->client->rollbackTransaction($args);
+        $this->client->rollbackTransaction($args)->resolve();
         $this->transactionId = null;
         return true;
     }

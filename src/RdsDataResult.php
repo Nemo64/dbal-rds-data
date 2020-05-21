@@ -3,14 +3,14 @@
 namespace Nemo64\DbalRdsData;
 
 
-use Aws\Result;
+use AsyncAws\RDSDataService\Result\ExecuteStatementResponse;
 use Doctrine\DBAL\Driver\ResultStatement;
 use Doctrine\DBAL\FetchMode;
 
 class RdsDataResult implements \IteratorAggregate, ResultStatement
 {
     /**
-     * @var Result
+     * @var ExecuteStatementResponse
      * @see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-rds-data-2018-08-01.html#executestatement
      */
     private $result;
@@ -21,14 +21,20 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
     private $dataConverter;
 
     /**
+     * @var array|null
+     */
+    private $records;
+
+    /**
      * @var array
      */
     private $fetchMode = [FetchMode::MIXED, null];
 
-    public function __construct(Result $result, RdsDataConverter $dataConverter = null)
+    public function __construct(ExecuteStatementResponse $result, RdsDataConverter $dataConverter = null)
     {
         $this->result = $result;
         $this->dataConverter = $dataConverter ?? new RdsDataConverter();
+        $this->records = $result->getRecords();
     }
 
     /**
@@ -45,7 +51,7 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
      */
     public function columnCount(): int
     {
-        return count($this->result['columnMetadata']);
+        return count($this->result->getColumnMetadata());
     }
 
     /**
@@ -57,7 +63,7 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
             throw new \RuntimeException("Cursor direction not implemented");
         }
 
-        $result = current($this->result['records']);
+        $result = current($this->records);
         if (!is_array($result)) {
             return $result;
         }
@@ -66,7 +72,7 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
         $result = $this->convertResultToFetchMode($result, ...$fetchMode);
 
         // advance the pointer and return
-        next($this->result['records']);
+        next($this->records);
         return $result;
     }
 
@@ -114,10 +120,7 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
      */
     public function closeCursor(): bool
     {
-        if (isset($this->result['records'])) {
-            $this->result['records'] = null;
-        }
-
+        $this->records = null;
         return true;
     }
 
@@ -126,15 +129,12 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
      */
     public function rowCount(): int
     {
-        if (isset($this->result['numberOfRecordsUpdated'])) {
-            return $this->result['numberOfRecordsUpdated'];
+        $numberOfRecordsUpdated = $this->result->getNumberOfRecordsUpdated();
+        if ($numberOfRecordsUpdated !== null) {
+            return $numberOfRecordsUpdated;
         }
 
-        if (isset($this->result['records'])) {
-            return count($this->result['records']);
-        }
-
-        return 0;
+        return count($this->records);
     }
 
     /**
@@ -148,33 +148,29 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
      */
     private function convertResultToFetchMode(array $result, int $fetchMode, $fetchArgument = null, $ctorArgs = null)
     {
-        $numResult = array_map([$this->dataConverter, 'convertToValue'], $result);
+        $numericResult = array_map([$this->dataConverter, 'convertToValue'], $result);
 
         switch ($fetchMode) {
             case FetchMode::NUMERIC:
-                return $numResult;
+                return $numericResult;
 
             case FetchMode::ASSOCIATIVE:
-                $columnNames = array_column($this->result['columnMetadata'], 'label');
-                return array_combine($columnNames, $numResult);
+                return array_combine($this->getColumnNames(), $numericResult);
 
             case FetchMode::MIXED:
-                $columnNames = array_column($this->result['columnMetadata'], 'label');
-                return $numResult + array_combine($columnNames, $numResult);
+                return $numericResult + array_combine($this->getColumnNames(), $numericResult);
 
             case FetchMode::STANDARD_OBJECT:
-                $columnNames = array_column($this->result['columnMetadata'], 'label');
-                return (object)array_combine($columnNames, $numResult);
+                return (object)array_combine($this->getColumnNames(), $numericResult);
 
             case FetchMode::COLUMN:
-                return $numResult[$fetchArgument ?? 0];
+                return $numericResult[$fetchArgument ?? 0];
 
             case FetchMode::CUSTOM_OBJECT:
                 try {
                     $class = new \ReflectionClass($fetchArgument);
                     $result = $class->newInstanceWithoutConstructor();
-
-                    self::mapProperties($class, $result, $this->result['columnMetadata'], $numResult);
+                    $this->mapProperties($class, $result, $numericResult);
 
                     $constructor = $class->getConstructor();
                     if ($constructor !== null) {
@@ -191,17 +187,38 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
         }
     }
 
-    private static function mapProperties(\ReflectionClass $class, $result, array $metadata, array $numResult)
+    /**
+     * @return array
+     */
+    private function getColumnNames(): array
     {
-        foreach ($metadata as $columnIndex => ['label' => $columnName]) {
-            if ($class->hasProperty($columnName)) {
-                $property = $class->getProperty($columnName);
+        $result = [];
+
+        foreach ($this->result->getColumnMetadata() as $columnIndex => $columnMetadata) {
+            $result[$columnIndex] = $columnMetadata->getLabel();
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param \ReflectionClass $class
+     * @param object $result
+     * @param array $numericResult
+     *
+     * @throws \ReflectionException
+     */
+    private function mapProperties(\ReflectionClass $class, $result, array $numericResult)
+    {
+        foreach ($this->result->getColumnMetadata() as $columnIndex => $columnMetadata) {
+            if ($class->hasProperty($columnMetadata->getLabel())) {
+                $property = $class->getProperty($columnMetadata->getLabel());
                 $property->setAccessible(true);
-                $property->setValue($result, $numResult[$columnIndex]);
+                $property->setValue($result, $numericResult[$columnIndex]);
                 continue;
             }
 
-            $result->{$columnName} = $numResult[$columnIndex];
+            $result->{$columnName} = $numericResult[$columnIndex];
         }
     }
 }

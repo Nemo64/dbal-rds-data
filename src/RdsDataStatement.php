@@ -3,7 +3,7 @@
 namespace Nemo64\DbalRdsData;
 
 
-use Aws\RDSDataService\Exception\RDSDataServiceException;
+use AsyncAws\Core\Exception\Http\HttpException;
 use Doctrine\DBAL\Driver\Statement;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\ParameterType;
@@ -203,22 +203,24 @@ class RdsDataStatement implements \IteratorAggregate, Statement
 
         try {
             $result = $this->connection->getClient()->executeStatement($args);
-
-            if (!empty($result['generatedFields'])) {
-                $generatedValue = $this->dataConverter->convertToValue(reset($result['generatedFields']));
-                $this->connection->setLastInsertId($generatedValue);
-            }
-
-            $this->result = new RdsDataResult($result, $this->dataConverter);
-            $this->result->setFetchMode(...$this->fetchMode);
-            return true;
-        } catch (RDSDataServiceException $exception) {
-            if ($exception->getAwsErrorCode() === 'BadRequestException') {
+            $result->resolve();
+        } catch (HttpException $exception) {
+            if ($exception->getAwsCode() === 'BadRequestException') {
                 throw RdsDataException::interpretErrorMessage($exception->getAwsErrorMessage());
             }
 
             throw $exception;
         }
+
+        $generatedFields = $result->getGeneratedFields();
+        if (!empty($generatedFields)) {
+            $generatedValue = $this->dataConverter->convertToValue(reset($generatedFields));
+            $this->connection->setLastInsertId($generatedValue);
+        }
+
+        $this->result = new RdsDataResult($result, $this->dataConverter);
+        $this->result->setFetchMode(...$this->fetchMode);
+        return true;
     }
 
     /**
