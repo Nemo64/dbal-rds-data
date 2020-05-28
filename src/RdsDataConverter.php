@@ -3,6 +3,8 @@
 namespace Nemo64\DbalRdsData;
 
 
+use AsyncAws\RDSDataService\ValueObject\ArrayValue;
+use AsyncAws\RDSDataService\ValueObject\Field;
 use Doctrine\DBAL\ParameterType;
 
 /**
@@ -12,7 +14,7 @@ use Doctrine\DBAL\ParameterType;
  */
 class RdsDataConverter
 {
-    public function convertToJson($value, $type): array
+    public function convertToJson($value, $type): Field
     {
         switch ($value === null ? ParameterType::NULL : $type) {
             case ParameterType::LARGE_OBJECT:
@@ -21,22 +23,21 @@ class RdsDataConverter
                     $value = stream_get_contents($value);
                 }
 
-                $value = base64_encode($value);
-                return ['blobValue' => $value];
+                return new Field(['blobValue' => $value]);
 
             case ParameterType::BOOLEAN:
-                return ['booleanValue' => (bool)$value];
+                return new Field(['booleanValue' => (bool)$value]);
 
             // missing double because there is no official double type
 
             case ParameterType::NULL:
-                return ['isNull' => true];
+                return new Field(['isNull' => true]);
 
             case ParameterType::INTEGER:
-                return ['longValue' => (int)$value];
+                return new Field(['longValue' => (int)$value]);
 
             case ParameterType::STRING:
-                return ['stringValue' => (string)$value];
+                return new Field(['stringValue' => (string)$value]);
         }
 
         throw new \RuntimeException("Type $type is not implemented.");
@@ -50,33 +51,38 @@ class RdsDataConverter
      *
      * This method converts this to a normal array that you'd expect.
      *
-     * @param array $json
+     * @param Field $json
      *
      * @return mixed
      */
-    public function convertToValue(array $json)
+    public function convertToValue(Field $field)
     {
-        $key = key($json);
-        $value = current($json);
-
-        switch ($key) {
-            case 'isNull':
-                return null;
-
-            case 'blobValue':
-                return base64_decode($value);
-
-            case 'arrayValue':
-                throw new \RuntimeException("arrayValue is not implemented.");
-
-            case 'structValue':
-                return array_map([$this, 'convertToValue'], $value);
-
-            // case 'booleanValue':
-            // case 'longValue':
-            // case 'stringValue':
-            default:
-                return $value;
+        if ($field->getIsNull()) {
+            return null;
         }
+
+        $arrayValue = $field->getArrayValue();
+        if ($arrayValue !== null) {
+            return $this->convertArrayValue($arrayValue);
+        }
+
+        return $field->getBlobValue()
+            ?? $field->getBooleanValue()
+            ?? $field->getDoubleValue()
+            ?? $field->getLongValue()
+            ?? $field->getStringValue();
+    }
+
+    private function convertArrayValue(ArrayValue $arrayValue)
+    {
+        $arrayValues = $arrayValue->getArrayValues();
+        if ($arrayValues !== null) {
+            return array_map([$this, 'convertArrayValue'], $arrayValues);
+        }
+
+        return $arrayValue->getBooleanValues()
+            ?? $arrayValue->getDoubleValues()
+            ?? $arrayValue->getLongValues()
+            ?? $arrayValue->getStringValues();
     }
 }
