@@ -14,7 +14,7 @@ use Doctrine\DBAL\ParameterType;
  */
 class RdsDataConverter
 {
-    public function convertToJson($value, $type): Field
+    public function convertToField($value, $type): Field
     {
         switch ($value === null ? ParameterType::NULL : $type) {
             case ParameterType::LARGE_OBJECT:
@@ -51,7 +51,7 @@ class RdsDataConverter
      *
      * This method converts this to a normal array that you'd expect.
      *
-     * @param Field $json
+     * @param Field $field
      *
      * @return mixed
      */
@@ -66,6 +66,7 @@ class RdsDataConverter
             return $this->convertArrayValue($arrayValue);
         }
 
+        /** @noinspection ProperNullCoalescingOperatorUsageInspection */
         return $field->getBlobValue()
             ?? $field->getBooleanValue()
             ?? $field->getDoubleValue()
@@ -73,10 +74,10 @@ class RdsDataConverter
             ?? $field->getStringValue();
     }
 
-    private function convertArrayValue(ArrayValue $arrayValue)
+    private function convertArrayValue(ArrayValue $arrayValue): array
     {
         $arrayValues = $arrayValue->getArrayValues();
-        if ($arrayValues !== null) {
+        if (!empty($arrayValues)) {
             return array_map([$this, 'convertArrayValue'], $arrayValues);
         }
 

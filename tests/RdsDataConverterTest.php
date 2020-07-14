@@ -39,6 +39,6 @@ class RdsDataConverterTest extends TestCase
     public function testConvertToJson($json, $php, $type)
     {
         $converter = new RdsDataConverter();
-        $this->assertEquals($json, $converter->convertToJson($php, $type));
+        $this->assertEquals($json, $converter->convertToField($php, $type));
     }
 }

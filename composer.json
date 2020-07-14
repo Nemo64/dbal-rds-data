@@ -25,7 +25,7 @@
     ],
     "require": {
         "php": "~7.1",
-        "async-aws/rds-data-service": "dev-master",
+        "async-aws/rds-data-service": "^0.1@dev",
         "doctrine/dbal": "^2.7"
     },
     "require-dev": {

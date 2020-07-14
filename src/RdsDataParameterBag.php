@@ -70,7 +70,7 @@ class RdsDataParameterBag
         foreach ($this->parameters as $column => $arguments) {
             $result[] = [
                 'name' => (string)$column,
-                'value' => $this->dataConverter->convertToJson(...$arguments),
+                'value' => $this->dataConverter->convertToField(...$arguments),
             ];
         }
 
