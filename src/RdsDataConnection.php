@@ -3,8 +3,9 @@
 namespace Nemo64\DbalRdsData;
 
 
+use Aws\RDSDataService\Exception\RDSDataServiceException;
 use Aws\RDSDataService\RDSDataServiceClient;
-use Doctrine\DBAL\Cache\ArrayStatement;
+use Aws\Result;
 use Doctrine\DBAL\Driver\Statement;
 
 class RdsDataConnection extends AbstractConnection
@@ -48,6 +49,16 @@ class RdsDataConnection extends AbstractConnection
      * @var null|string
      */
     private $lastInsertedId;
+
+    /**
+     * @var int
+     */
+    private $pauseRetries = 0;
+
+    /**
+     * @var int
+     */
+    private $pauseRetryDelay = 5;
 
     public function __construct(RDSDataServiceClient $client, string $resourceArn, string $secretArn, string $database = null)
     {
@@ -102,6 +113,7 @@ class RdsDataConnection extends AbstractConnection
     /**
      * @inheritDoc
      * @see https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_BeginTransaction.html
+     * @throws RdsDataException
      */
     public function beginTransaction(): bool
     {
@@ -115,7 +127,7 @@ class RdsDataConnection extends AbstractConnection
             'secretArn' => $this->secretArn,
         ];
 
-        $response = $this->client->beginTransaction($args);
+        $response = $this->call('beginTransaction', $args);
         $this->transactionId = $response['transactionId'];
         return true;
     }
@@ -123,6 +135,7 @@ class RdsDataConnection extends AbstractConnection
     /**
      * @inheritDoc
      * @see https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_CommitTransaction.html
+     * @throws RdsDataException
      */
     public function commit(): bool
     {
@@ -136,7 +149,7 @@ class RdsDataConnection extends AbstractConnection
             'transactionId' => $this->transactionId,
         ];
 
-        $this->client->commitTransaction($args);
+        $this->call('commitTransaction', $args);
         $this->transactionId = null;
         return true;
     }
@@ -144,6 +157,7 @@ class RdsDataConnection extends AbstractConnection
     /**
      * @inheritDoc
      * @see https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_RollbackTransaction.html
+     * @throws RdsDataException
      */
     public function rollBack(): bool
     {
@@ -157,7 +171,7 @@ class RdsDataConnection extends AbstractConnection
             'transactionId' => $this->transactionId,
         ];
 
-        $this->client->rollbackTransaction($args);
+        $this->call('rollbackTransaction', $args);
         $this->transactionId = null;
         return true;
     }
@@ -214,5 +228,65 @@ class RdsDataConnection extends AbstractConnection
     public function getTransactionId(): ?string
     {
         return $this->transactionId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPauseRetries(): int
+    {
+        return $this->pauseRetries;
+    }
+
+    /**
+     * @param int $pauseRetries
+     */
+    public function setPauseRetries(int $pauseRetries): void
+    {
+        $this->pauseRetries = $pauseRetries;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPauseRetryDelay(): int
+    {
+        return $this->pauseRetryDelay;
+    }
+
+    /**
+     * @param int $pauseRetryDelay
+     */
+    public function setPauseRetryDelay(int $pauseRetryDelay): void
+    {
+        $this->pauseRetryDelay = $pauseRetryDelay;
+    }
+
+    /**
+     * Runs a rds data command and handles errors.
+     *
+     * @param string $command
+     * @param array $args
+     * @param int $retry
+     * @return Result
+     * @throws RdsDataException
+     */
+    public function call(string $command, array $args, int $retry = 0): Result
+    {
+        try {
+            return $this->client->__call($command, [$args]);
+        } catch (RDSDataServiceException $exception) {
+            if ($exception->getAwsErrorCode() !== 'BadRequestException') {
+                throw $exception;
+            }
+
+            $interpretedException = RdsDataException::interpretErrorMessage($exception->getAwsErrorMessage());
+            if ($interpretedException->getErrorCode() === '6000' && $this->getPauseRetries() > $retry) {
+                sleep($this->getPauseRetryDelay());
+                return $this->call($command, $args, $retry + 1);
+            }
+
+            throw $interpretedException;
+        }
     }
 }

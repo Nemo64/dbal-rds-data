@@ -34,12 +34,17 @@ class RdsDataDriver extends Driver\AbstractMySQLDriver
             $options['credentials']['secret'] = $password;
         }
 
-        return new RdsDataConnection(
+        $connection = new RdsDataConnection(
             new RDSDataServiceClient($options),
             $driverOptions['resourceArn'],
             $driverOptions['secretArn'],
             $params['dbname'] ?? null
         );
+
+        $connection->setPauseRetries($driverOptions['pauseRetries'] ?? 0);
+        $connection->setPauseRetryDelay($driverOptions['pauseRetryDelay'] ?? 10);
+
+        return $connection;
     }
 
     /**

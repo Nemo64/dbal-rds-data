@@ -131,6 +131,11 @@ Other than the configuration it should work exactly like any other dbal connecti
   Schema update queries will automatically be executed with the `continueAfterTimeout` option.
   If you need to run long update queries than you might want to use the rds data client directly.
   Use `$dbalConnection->getWrappedConnection()->getClient()` to get the aws-sdk client.   
+- `pauseRetries` (int; default=0) The amount of retries when the database is paused.
+  If you set this, also consider setting `pauseRetryDelay` to ensure a somewhat correct retry time.
+- `pauseRetryDelay` (int; default=10) The amount of seconds to wait until another attempt is made
+  if the last one failed due to the database being paused.
+  As of writing this, Aurora takes anywhere from 30 seconds to 2 minutes to unpause.
 
 ### CloudFormation
 

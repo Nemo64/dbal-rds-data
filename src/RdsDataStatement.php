@@ -201,24 +201,16 @@ class RdsDataStatement implements \IteratorAggregate, Statement
             $args['transactionId'] = $transactionId;
         }
 
-        try {
-            $result = $this->connection->getClient()->executeStatement($args);
+        $result = $this->connection->call('executeStatement', $args);
 
-            if (!empty($result['generatedFields'])) {
-                $generatedValue = $this->dataConverter->convertToValue(reset($result['generatedFields']));
-                $this->connection->setLastInsertId($generatedValue);
-            }
-
-            $this->result = new RdsDataResult($result, $this->dataConverter);
-            $this->result->setFetchMode(...$this->fetchMode);
-            return true;
-        } catch (RDSDataServiceException $exception) {
-            if ($exception->getAwsErrorCode() === 'BadRequestException') {
-                throw RdsDataException::interpretErrorMessage($exception->getAwsErrorMessage());
-            }
-
-            throw $exception;
+        if (!empty($result['generatedFields'])) {
+            $generatedValue = $this->dataConverter->convertToValue(reset($result['generatedFields']));
+            $this->connection->setLastInsertId($generatedValue);
         }
+
+        $this->result = new RdsDataResult($result, $this->dataConverter);
+        $this->result->setFetchMode(...$this->fetchMode);
+        return true;
     }
 
     /**
