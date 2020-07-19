@@ -230,33 +230,21 @@ class RdsDataConnection extends AbstractConnection
         return $this->transactionId;
     }
 
-    /**
-     * @return int
-     */
     public function getPauseRetries(): int
     {
         return $this->pauseRetries;
     }
 
-    /**
-     * @param int $pauseRetries
-     */
     public function setPauseRetries(int $pauseRetries): void
     {
         $this->pauseRetries = $pauseRetries;
     }
 
-    /**
-     * @return int
-     */
     public function getPauseRetryDelay(): int
     {
         return $this->pauseRetryDelay;
     }
 
-    /**
-     * @param int $pauseRetryDelay
-     */
     public function setPauseRetryDelay(int $pauseRetryDelay): void
     {
         $this->pauseRetryDelay = $pauseRetryDelay;
