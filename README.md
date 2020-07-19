@@ -18,26 +18,21 @@ I tested the schema tools, migrations and transactions.
 ## Why would you use it?
 
 - The data api makes it possible to use a database in an aws hosting environment
-  without the need for VPC's which are not that easy to set up,
-  cost money if you need internet access
-  and slow down lambda function starts
-  (which you can run php on using custom runtimes like [bref]).
+  without the need for VPC's which add complexity
+  and cost money if you need internet access though NAT Gateways.
 - Your application does not need the database password in plain text.
   You just need access to the aws api which can be managed a lot better.
   (there are other ways to achieve the same but still, it is really easy with the data api)
 - There might be a performance benefit due to not needing to establish
-  a direct database connection and automatic pool management
-  (which is unheard of in the php world).
+  a direct database connection and automatic pool management.
   
 ## Why wouldn't you use it?
 
-- This implementation isn't battle tested. Be prepared for problems. Have a look into the
+- This implementation hasn't been battle tested for 20 years. Have a look into the
   [Implementation Details](#implementation-details) section and see if you are comfortable with them.
 - The [rds-data] api has size restrictions in the [ExecuteStatement] call
-  which might become a problem when your application grows.
-  I have ideas how to work around that but there is nothing implemented yet.
-- The [rds-data] api is currently only available in [a few regions]. This limitation can be lifted any day though.
-  However, at the moment of writing this, there is only 1 region in europe available.
+  which might become a problem when your application grows although they don't seem to be enabled at this moment.
+- The [rds-data] api is [not available everywhere]. This limitation is slowly getting lifted though.
 - The [rds-data] api has some inherit limitations base on the fact that it is mostly stateless.
   The biggest problem is that you can't set (session) variables.
   This also means you can't [setTransactionIsolation] levels although that is an optional feature in dbal anyways.
@@ -261,9 +256,8 @@ and instead use parameter binding whenever possible.
 
 [rds-data]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
 [dbal]: https://www.doctrine-project.org/projects/doctrine-dbal/en/2.10/index.html
-[bref]: https://bref.sh/
 [ExecuteStatement]: https://docs.aws.amazon.com/rdsdataservice/latest/APIReference/API_ExecuteStatement.html
-[a few regions]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions
+[not available everywhere]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions
 [setTransactionIsolation]: https://www.doctrine-project.org/projects/doctrine-dbal/en/2.10/reference/transactions.html
 [Aurora Serverless]: https://aws.amazon.com/de/rds/aurora/serverless/
 [SLA]: https://aws.amazon.com/de/rds/aurora/sla/
