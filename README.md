@@ -131,6 +131,10 @@ Other than the configuration it should work exactly like any other dbal connecti
 - `pauseRetryDelay` (int; default=10) The amount of seconds to wait until another attempt is made
   if the last one failed due to the database being paused.
   As of writing this, Aurora takes anywhere from 30 seconds to 2 minutes to unpause.
+  This is way too long to wait in most cases.
+  Lambda will automatically retry events, so you are normally better of just letting the event fail.
+  A user also usually won't wait a minute for a page to load, so you should present them with a proper error.
+  See [Paused databases](#paused-databases) for a way to do that.
 
 ### CloudFormation
 
