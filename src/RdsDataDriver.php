@@ -3,13 +3,11 @@
 namespace Nemo64\DbalRdsData;
 
 
-use Aws\Handler\GuzzleV6\GuzzleHandler;
 use Aws\RDSDataService\RDSDataServiceClient;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\DriverException;
-use Doctrine\DBAL\Exception AS DBALException;
-use GuzzleHttp\Client;
+use Doctrine\DBAL\Exception as DBALException;
 
 class RdsDataDriver extends Driver\AbstractMySQLDriver
 {
@@ -21,6 +19,11 @@ class RdsDataDriver extends Driver\AbstractMySQLDriver
         $options = [
             'version' => '2018-08-01',
             'region' => $params['host'],
+            'http' => [
+                // all calls to the data-api will time out after 45 seconds
+                // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
+                'timeout' => $driverOptions['timeout'] ?? 45,
+            ],
         ];
 
         if ($username !== null && $username !== 'root') {
@@ -30,12 +33,6 @@ class RdsDataDriver extends Driver\AbstractMySQLDriver
         if ($password !== null) {
             $options['credentials']['secret'] = $password;
         }
-
-        $options['http_handler'] = new GuzzleHandler(new Client([
-            // all calls to the data-api will time out after 45 seconds
-            // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html
-            'timeout' => $driverOptions['timeout'] ?? 45,
-        ]));
 
         return new RdsDataConnection(
             new RDSDataServiceClient($options),
@@ -75,7 +72,7 @@ class RdsDataDriver extends Driver\AbstractMySQLDriver
         if (!$connection instanceof RdsDataConnection) {
             return null;
         }
-        
+
         return $connection->getDatabase();
     }
 }
