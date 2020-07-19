@@ -204,7 +204,6 @@ class RdsDataConnectionTest extends TestCase
 
     public function testInsert()
     {
-
         $this->addClientCall(
             'executeStatement',
             [
@@ -231,5 +230,29 @@ class RdsDataConnectionTest extends TestCase
         $statement->execute([5]);
         $this->assertEquals(1, $statement->rowCount());
         $this->assertEquals(5, $this->connection->lastInsertId());
+    }
+
+    public static function databaseUseStatements()
+    {
+        return [
+            ['foobar', 'use foobar'],
+            ['foobar', 'use foobar;'],
+            ['foobar', 'use   foobar ; '],
+            ['bar foo', 'use `bar foo`'],
+            ['bar foo', 'use `bar foo`;'],
+            ['bar foo', 'use   `bar foo`  ;  '],
+        ];
+    }
+
+    /**
+     * @dataProvider databaseUseStatements
+     */
+    public function testUseDatabase($dbname, $useStatement)
+    {
+        $this->assertEquals('db', $this->connection->getDatabase());
+        $statement = $this->connection->prepare($useStatement);
+        $this->assertEquals('db', $this->connection->getDatabase());
+        $this->assertTrue($statement->execute());
+        $this->assertEquals($dbname, $this->connection->getDatabase());
     }
 }

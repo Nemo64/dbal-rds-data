@@ -5,6 +5,7 @@ namespace Nemo64\DbalRdsData;
 
 use Aws\Handler\GuzzleV6\GuzzleHandler;
 use Aws\RDSDataService\RDSDataServiceClient;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\DriverException;
 use Doctrine\DBAL\Exception AS DBALException;
@@ -40,7 +41,7 @@ class RdsDataDriver extends Driver\AbstractMySQLDriver
             new RDSDataServiceClient($options),
             $driverOptions['resourceArn'],
             $driverOptions['secretArn'],
-            $params['dbname']
+            $params['dbname'] ?? null
         );
     }
 
@@ -63,4 +64,18 @@ class RdsDataDriver extends Driver\AbstractMySQLDriver
         }
     }
 
+    public function getDatabase(Connection $conn)
+    {
+        $params = $conn->getParams();
+        if (isset($params['dbname'])) {
+            return $params['dbname'];
+        }
+
+        $connection = $conn->getWrappedConnection();
+        if (!$connection instanceof RdsDataConnection) {
+            return null;
+        }
+        
+        return $connection->getDatabase();
+    }
 }

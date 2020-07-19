@@ -4,6 +4,7 @@ namespace Nemo64\DbalRdsData;
 
 
 use Aws\RDSDataService\RDSDataServiceClient;
+use Doctrine\DBAL\Cache\ArrayStatement;
 use Doctrine\DBAL\Driver\Statement;
 
 class RdsDataConnection extends AbstractConnection
@@ -24,7 +25,7 @@ class RdsDataConnection extends AbstractConnection
     private $secretArn;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $database;
 
@@ -48,7 +49,7 @@ class RdsDataConnection extends AbstractConnection
      */
     private $lastInsertedId;
 
-    public function __construct(RDSDataServiceClient $client, string $resourceArn, string $secretArn, string $database)
+    public function __construct(RDSDataServiceClient $client, string $resourceArn, string $secretArn, string $database = null)
     {
         $this->client = $client;
         $this->resourceArn = $resourceArn;
@@ -69,6 +70,13 @@ class RdsDataConnection extends AbstractConnection
      */
     public function prepare($prepareString): Statement
     {
+        // allow selecting a database by "use database;" statement
+        if (preg_match('#^\s*use\s+(?:(\w+)|`([^`]+)`)\s*;?\s*$#i', $prepareString, $match)) {
+            return new CallbackStatement(function () use ($match) {
+                $this->setDatabase($match[1] ?: $match[2]);
+            });
+        }
+
         $this->lastStatement = new RdsDataStatement($this, $prepareString, $this->dataConverter);
         return $this->lastStatement;
     }
@@ -193,9 +201,14 @@ class RdsDataConnection extends AbstractConnection
         return $this->secretArn;
     }
 
-    public function getDatabase(): string
+    public function getDatabase(): ?string
     {
         return $this->database;
+    }
+
+    public function setDatabase(?string $database): void
+    {
+        $this->database = $database;
     }
 
     public function getTransactionId(): ?string
