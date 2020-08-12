@@ -3,7 +3,7 @@
 namespace Nemo64\DbalRdsData;
 
 
-use AsyncAws\RDSDataService\RdsDataServiceClient;
+use AsyncAws\RdsDataService\RdsDataServiceClient;
 use Doctrine\DBAL\Driver\Statement;
 
 class RdsDataConnection extends AbstractConnection
@@ -41,7 +41,7 @@ class RdsDataConnection extends AbstractConnection
     /**
      * @var null|string
      */
-    private $transactionId = null;
+    private $transactionId;
 
     /**
      * @var null|string

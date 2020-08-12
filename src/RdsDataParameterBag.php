@@ -32,10 +32,7 @@ class RdsDataParameterBag
         $this->dataConverter = $dataConverter ?? new RdsDataConverter();
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function bindValue($param, $value, $type = ParameterType::STRING)
+    public function bindValue($param, $value, $type = ParameterType::STRING): bool
     {
         // The difference between bindValue and bindParam is that bindParam takes a reference.
         // https://stackoverflow.com/questions/1179874/what-is-the-difference-between-bindparam-and-bindvalue
@@ -44,9 +41,6 @@ class RdsDataParameterBag
         return $this->bindParam($param, $value, $type);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function bindParam($column, &$variable, $type = ParameterType::STRING, $length = null): bool
     {
         if ($length !== null) {
@@ -98,7 +92,7 @@ class RdsDataParameterBag
                 throw new \LogicException("Numeric parameters must start with 0 or 1.");
             }
 
-            $createParameter = function () use (&$index) {
+            $createParameter = static function () use (&$index) {
                 return ':' . $index++;
             };
 

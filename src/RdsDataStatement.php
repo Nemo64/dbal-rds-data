@@ -130,7 +130,7 @@ class RdsDataStatement implements \IteratorAggregate, Statement
     /**
      * @inheritDoc
      */
-    public function bindValue($param, $value, $type = ParameterType::STRING)
+    public function bindValue($param, $value, $type = ParameterType::STRING): bool
     {
         return $this->parameterBag->bindValue($param, $value, $type);
     }
@@ -164,7 +164,7 @@ class RdsDataStatement implements \IteratorAggregate, Statement
     /**
      * @inheritDoc
      */
-    public function errorInfo()
+    public function errorInfo(): array
     {
         // TODO: Implement errorInfo() method.
         return [];
@@ -206,7 +206,7 @@ class RdsDataStatement implements \IteratorAggregate, Statement
             $result->resolve();
         } catch (HttpException $exception) {
             if ($exception->getAwsCode() === 'BadRequestException') {
-                throw RdsDataException::interpretErrorMessage($exception->getAwsErrorMessage());
+                throw RdsDataException::interpretErrorMessage($exception->getAwsMessage());
             }
 
             throw $exception;

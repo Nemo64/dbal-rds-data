@@ -3,8 +3,8 @@
 namespace Nemo64\DbalRdsData;
 
 
-use AsyncAws\RDSDataService\ValueObject\ArrayValue;
-use AsyncAws\RDSDataService\ValueObject\Field;
+use AsyncAws\RdsDataService\ValueObject\ArrayValue;
+use AsyncAws\RdsDataService\ValueObject\Field;
 use Doctrine\DBAL\ParameterType;
 
 /**
@@ -66,7 +66,6 @@ class RdsDataConverter
             return $this->convertArrayValue($arrayValue);
         }
 
-        /** @noinspection ProperNullCoalescingOperatorUsageInspection */
         return $field->getBlobValue()
             ?? $field->getBooleanValue()
             ?? $field->getDoubleValue()

@@ -3,7 +3,7 @@
 namespace Nemo64\DbalRdsData;
 
 
-use AsyncAws\RDSDataService\Result\ExecuteStatementResponse;
+use AsyncAws\RdsDataService\Result\ExecuteStatementResponse;
 use Doctrine\DBAL\Driver\ResultStatement;
 use Doctrine\DBAL\FetchMode;
 
@@ -68,8 +68,8 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
             return $result;
         }
 
-        $fetchMode = $fetchMode !== null ? [$fetchMode, null] : $this->fetchMode;
-        $result = $this->convertResultToFetchMode($result, ...$fetchMode);
+        $fetchModeParams = $fetchMode !== null ? [$fetchMode, null] : $this->fetchMode;
+        $result = $this->convertResultToFetchMode($result, ...$fetchModeParams);
 
         // advance the pointer and return
         next($this->records);
@@ -169,15 +169,15 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
             case FetchMode::CUSTOM_OBJECT:
                 try {
                     $class = new \ReflectionClass($fetchArgument);
-                    $result = $class->newInstanceWithoutConstructor();
-                    $this->mapProperties($class, $result, $numericResult);
+                    $object = $class->newInstanceWithoutConstructor();
+                    $this->mapProperties($class, $object, $numericResult);
 
                     $constructor = $class->getConstructor();
                     if ($constructor !== null) {
-                        $constructor->invokeArgs($result, (array)$ctorArgs);
+                        $constructor->invokeArgs($object, (array)$ctorArgs);
                     }
 
-                    return $result;
+                    return $object;
                 } catch (\ReflectionException $e) {
                     throw new RdsDataException("could not fetch as class '$fetchArgument': {$e->getMessage()}", 0, $e);
                 }
@@ -208,7 +208,7 @@ class RdsDataResult implements \IteratorAggregate, ResultStatement
      *
      * @throws \ReflectionException
      */
-    private function mapProperties(\ReflectionClass $class, $result, array $numericResult)
+    private function mapProperties(\ReflectionClass $class, $result, array $numericResult): void
     {
         foreach ($this->result->getColumnMetadata() as $columnIndex => $columnMetadata) {
             if ($class->hasProperty($columnMetadata->getLabel())) {
