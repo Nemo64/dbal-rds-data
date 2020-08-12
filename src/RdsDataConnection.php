@@ -3,13 +3,13 @@
 namespace Nemo64\DbalRdsData;
 
 
-use AsyncAws\RDSDataService\RDSDataServiceClient;
+use AsyncAws\RDSDataService\RdsDataServiceClient;
 use Doctrine\DBAL\Driver\Statement;
 
 class RdsDataConnection extends AbstractConnection
 {
     /**
-     * @var RDSDataServiceClient
+     * @var RdsDataServiceClient
      */
     private $client;
 
@@ -48,7 +48,7 @@ class RdsDataConnection extends AbstractConnection
      */
     private $lastInsertedId;
 
-    public function __construct(RDSDataServiceClient $client, string $resourceArn, string $secretArn, string $database)
+    public function __construct(RdsDataServiceClient $client, string $resourceArn, string $secretArn, string $database)
     {
         $this->client = $client;
         $this->resourceArn = $resourceArn;
@@ -178,7 +178,7 @@ class RdsDataConnection extends AbstractConnection
         return $this->lastStatement->errorInfo();
     }
 
-    public function getClient(): RDSDataServiceClient
+    public function getClient(): RdsDataServiceClient
     {
         return $this->client;
     }

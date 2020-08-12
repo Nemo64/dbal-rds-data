@@ -3,7 +3,7 @@
 namespace Nemo64\DbalRdsData;
 
 
-use AsyncAws\RDSDataService\RDSDataServiceClient;
+use AsyncAws\RDSDataService\RdsDataServiceClient;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\DriverException;
 use Doctrine\DBAL\Exception as DBALException;
@@ -30,7 +30,7 @@ class RdsDataDriver extends Driver\AbstractMySQLDriver
         unset($driverOptions['resourceArn']);
         unset($driverOptions['secretArn']);
 
-        $client = new RDSDataServiceClient(array_replace($options, $driverOptions));
+        $client = new RdsDataServiceClient(array_replace($options, $driverOptions));
         return new RdsDataConnection($client, $resourceArn, $secretArn, $params['dbname']);
     }
 
