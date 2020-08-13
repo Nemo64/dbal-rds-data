@@ -3,7 +3,7 @@
 namespace Nemo64\DbalRdsData;
 
 
-use AsyncAws\Core\Exception\Http\HttpException;
+use AsyncAws\Core\Exception\Http\ClientException;
 use Doctrine\DBAL\Driver\Statement;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\ParameterType;
@@ -204,12 +204,8 @@ class RdsDataStatement implements \IteratorAggregate, Statement
         try {
             $result = $this->connection->getClient()->executeStatement($args);
             $result->resolve();
-        } catch (HttpException $exception) {
-            if ($exception->getAwsType() === 'BadRequestException') {
-                throw RdsDataException::interpretErrorMessage($exception->getAwsMessage());
-            }
-
-            throw $exception;
+        } catch (ClientException $exception) {
+            throw RdsDataException::interpretErrorMessage($exception->getAwsMessage());
         }
 
         $generatedFields = $result->getGeneratedFields();
