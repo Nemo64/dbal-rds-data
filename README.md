@@ -213,6 +213,9 @@ This might be [serverless] flavoured but you should get the hang of it.
       TargetType: AWS::RDS::DBCluster
 ```
 
+I also wrote an article going more into detail on how to setup and share an Aurora Serverless between multiple stacks:
+[www.marco.zone/shared-aurora-serverless-using-cloudformation](https://www.marco.zone/shared-aurora-serverless-using-cloudformation)
+
 ## Implementation details
 
 ### Error handling
