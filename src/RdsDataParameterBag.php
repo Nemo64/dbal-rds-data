@@ -11,7 +11,7 @@ class RdsDataParameterBag
      * This expression can be used to find numeric parameters in an sql statement.
      * It understands strings and prevents matching within them.
      */
-    private const NUMERIC_PARAMETER_EXPRESSION = '/\?(?=([^\'"`]|\'([^\']|\\\\\')*\'|"([^"]|\\\\")*"|`([^`]|\\\\`)*`)*$)/';
+    private const NUMERIC_PARAMETER_EXPRESSION = '/\?(?=([^\'"`]+|\'([^\']|\\\\\')*\'|"([^"]|\\\\")*"|`([^`]|\\\\`)*`)*$)/';
 
     /**
      * @var array
@@ -89,20 +89,27 @@ class RdsDataParameterBag
     public function prepareSqlStatement(string $sql): string
     {
         $numericParameters = array_filter(array_keys($this->parameters), 'is_int');
+        if (count($numericParameters) <= 0) {
+            return $sql;
+        }
 
-        if (count($numericParameters) > 0) {
+        // it is valid to start numeric parameters 0 and 1
+        $index = min($numericParameters);
+        if ($index !== 0 && $index !== 1) {
+            throw new \LogicException("Numeric parameters must start with 0 or 1.");
+        }
 
-            // it is valid to start numeric parameters 0 and 1
-            $index = min($numericParameters);
-            if ($index !== 0 && $index !== 1) {
-                throw new \LogicException("Numeric parameters must start with 0 or 1.");
-            }
+        $createParameter = static function () use (&$index) {
+            return ':' . $index++;
+        };
 
-            $createParameter = function () use (&$index) {
-                return ':' . $index++;
-            };
-
-            $sql = preg_replace_callback(self::NUMERIC_PARAMETER_EXPRESSION, $createParameter, $sql);
+        $sql = preg_replace_callback(self::NUMERIC_PARAMETER_EXPRESSION, $createParameter, $sql);
+        if (!is_string($sql)) {
+            // snipped from https://www.php.net/manual/de/function.preg-last-error.php#124124
+            $pregError = array_flip(array_filter(get_defined_constants(true)['pcre'], function ($value) {
+                return substr($value, -6) === '_ERROR';
+            }, ARRAY_FILTER_USE_KEY))[preg_last_error()] ?? 'unknown error';
+            throw new \RuntimeException("sql param replacement failed: $pregError");
         }
 
         return $sql;

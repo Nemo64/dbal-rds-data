@@ -11,15 +11,56 @@ class RdsDataParameterBagTest extends TestCase
     public static function sqlPreparation()
     {
         return [
-            [[0 => 1], 'SELECT * FROM x WHERE y = ?', 'SELECT * FROM x WHERE y = :0'],
-            [[1 => 1], 'SELECT * FROM x WHERE y = ?', 'SELECT * FROM x WHERE y = :1'],
-            [[1 => 1], "SELECT * FROM x WHERE x = '?' AND y = ?", "SELECT * FROM x WHERE x = '?' AND y = :1"],
-            [[1 => 1], "SELECT * FROM x WHERE x = ? AND y = '?'", "SELECT * FROM x WHERE x = :1 AND y = '?'"],
-            [[1 => 1], "SELECT * FROM x WHERE x = ? AND y = `?`", "SELECT * FROM x WHERE x = :1 AND y = `?`"],
-            [[1 => 1], 'SELECT * FROM x WHERE x = ? AND y = "?"', 'SELECT * FROM x WHERE x = :1 AND y = "?"'],
-            [[1 => 1], "SELECT * FROM x WHERE x = ? AND y = '\\'?'", "SELECT * FROM x WHERE x = :1 AND y = '\\'?'"],
-            [[1 => 1], "SELECT * FROM x WHERE x = '\\\\' AND y = ? AND z = '\\\\'", "SELECT * FROM x WHERE x = '\\\\' AND y = :1 AND z = '\\\\'"],
-            [['foo' => 1], 'SELECT * FROM x WHERE x = ? AND y = "?"', 'SELECT * FROM x WHERE x = ? AND y = "?"'],
+            [
+                [0 => 1],
+                'SELECT * FROM x WHERE y = ?',
+                'SELECT * FROM x WHERE y = :0'
+            ],
+            [
+                [1 => 1],
+                'SELECT * FROM x WHERE y = ?',
+                'SELECT * FROM x WHERE y = :1'
+            ],
+            [
+                [1 => 1],
+                "SELECT * FROM x WHERE x = '?' AND y = ?",
+                "SELECT * FROM x WHERE x = '?' AND y = :1"
+            ],
+            [
+                [1 => 1],
+                "SELECT * FROM x WHERE x = ? AND y = '?'",
+                "SELECT * FROM x WHERE x = :1 AND y = '?'"
+            ],
+            [
+                [1 => 1],
+                "SELECT * FROM x WHERE x = ? AND y = `?`",
+                "SELECT * FROM x WHERE x = :1 AND y = `?`"
+            ],
+            [
+                [1 => 1],
+                'SELECT * FROM x WHERE x = ? AND y = "?"',
+                'SELECT * FROM x WHERE x = :1 AND y = "?"'
+            ],
+            [
+                [1 => 1],
+                "SELECT * FROM x WHERE x = ? AND y = '\\'?'",
+                "SELECT * FROM x WHERE x = :1 AND y = '\\'?'"
+            ],
+            [
+                [1 => 1],
+                "SELECT * FROM x WHERE x = '\\\\' AND y = ? AND z = '\\\\'",
+                "SELECT * FROM x WHERE x = '\\\\' AND y = :1 AND z = '\\\\'"
+            ],
+            [
+                ['foo' => 1],
+                'SELECT * FROM x WHERE x = ? AND y = "?"',
+                'SELECT * FROM x WHERE x = ? AND y = "?"'
+            ],
+            [
+                [1 => 1],
+                'SELECT * FROM x WHERE x = ? AND y IN (' . implode(',', range(0, 1500)) . ')',
+                'SELECT * FROM x WHERE x = :1 AND y IN (' . implode(',', range(0, 1500)) . ')'
+            ],
         ];
     }
 
