@@ -15,6 +15,10 @@ This is experimental. I implemented it in a symfony project
 with the doctrine orm and with this driver it worked fine.
 I tested the schema tools, migrations and transactions. 
 
+At this moment, I wouldn't recommend using the rds-data api at all
+because of it's 1000 request per second limitation that they secretly added at the end of 2020.
+It is listed as "Data API requests per second" in your service quota list but not in the documentation.
+
 ## Why would you use it?
 
 - The data api makes it possible to use a database in an aws hosting environment
@@ -30,6 +34,10 @@ I tested the schema tools, migrations and transactions.
 
 - This implementation hasn't been battle tested for 20 years. Have a look into the
   [Implementation Details](#implementation-details) section and see if you are comfortable with them.
+- Performance while running many small queries is probably the biggest issue.
+  The rds data api has (as of writing this) a not well documented limit of 1000 queries per second per account.
+  If you have ever worked with the doctrine orm, then you know that that's not a lot, especially if you run unoptimized background jobs.
+  The aws sdk will retry queries, which just means that everything will become slow.
 - The [rds-data] api has size restrictions in the [ExecuteStatement] call
   which might become a problem when your application grows although they don't seem to be enabled at this moment.
 - The [rds-data] api is [not available everywhere]. This limitation is slowly getting lifted though.
@@ -44,9 +52,6 @@ I tested the schema tools, migrations and transactions.
   - Aurora Classic to get an [SLA] or to benefit from reserved instance pricing on predictable workloads
   - Aurora Global for better availability and all the benefits of Aurora Classic
   - or even normal RDS to save money or use engines that are not emulated by Aurora 
-  
-Those are a lot of disadvantages, and the list is probably not complete.
-But don't be afraid of it. If you are using the doctrine/orm you'll likely not encounter any problems at all.
 
 ## How to use it
 
