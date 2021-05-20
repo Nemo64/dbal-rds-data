@@ -24,7 +24,7 @@
         }
     ],
     "require": {
-        "php": "~7.1",
+        "php": "~7.1||~8.0",
         "aws/aws-sdk-php": "^3.98",
         "doctrine/dbal": "^2.7"
     },
