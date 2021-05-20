@@ -11,7 +11,7 @@ class RdsDataStatementTest extends TestCase
 {
     use RdsDataServiceClientTrait;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->createRdsDataServiceClient();
     }

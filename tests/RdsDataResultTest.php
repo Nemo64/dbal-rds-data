@@ -43,7 +43,7 @@ class RdsDataResultTest extends TestCase
             'foo',
         ];
 
-        yield 'COLUMN' => [
+        yield 'COLUMN_SPECIFIC' => [
             [FetchMode::COLUMN, 1],
             'bar',
         ];
@@ -73,7 +73,7 @@ class RdsDataResultTest extends TestCase
         ];
     }
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->result = new RdsDataResult(new Result([
             'columnMetadata' => [

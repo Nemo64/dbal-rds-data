@@ -10,7 +10,7 @@ class RdsDataConnectionTest extends TestCase
 {
     use RdsDataServiceClientTrait;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->createRdsDataServiceClient();
     }
